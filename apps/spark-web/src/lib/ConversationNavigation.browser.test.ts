@@ -167,7 +167,7 @@ it("pins recognizable QQ branding, removes global actions, and scopes each new c
       channelAdapters: [
         {
           ...input.data.channelAdapters[0]!,
-          botProfile: { displayName: "Test assistant", avatarUrl: "/missing-bot-avatar.png" },
+          botProfile: { displayName: "Test assistant", avatarUrl: "data:image/png;base64,AAAA" },
         },
       ],
     },
