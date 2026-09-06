@@ -173,3 +173,5 @@ See [surfaces and ownership](/concepts/surfaces/) and
 [runs and sessions](/guides/runs-and-sessions/).
 
 Contiguous reasoning, tool calls, and results share one Spark message header and a collapsible execution summary. The final answer remains visible below it. Expanding the summary reveals the original details; history search opens the matching execution and media keeps its original transcript source.
+
+The sidebar keeps New conversation at the top and Settings at the bottom. Its middle section scrolls independently and groups recent conversations by workspace, with five initially visible per group and Show more for older entries. The selected conversation remains listed even when it is older. Workspace headings open their workspace, and All conversations opens the complete list. Navigation refreshes on route changes, window focus, and current-session activity transitions; it reads daemon projections rather than inferring activity. The mobile menu uses the same grouping and closes when a conversation is selected.

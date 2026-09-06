@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
-  import { goto } from "$app/navigation";
+  import { goto, invalidate } from "$app/navigation";
   import {
     brandIconForModelProvider,
     Button,
@@ -370,8 +370,10 @@
     void refreshAsks(sessionId);
     detachSessionEvents = attachWebSessionEvents(sessionId, (latest) => {
       if (latest.snapshot.sessionId !== sessionId) return;
+      const statusChanged = snapshot.status !== latest.snapshot.status;
       const wasBusy = ["queued", "running", "streaming"].includes(snapshot.status);
       adoptLiveSnapshot(latest);
+      if (statusChanged) void invalidate("spark:navigation");
       if (
         wasBusy &&
         !["queued", "running", "streaming"].includes(latest.snapshot.status)
@@ -1036,6 +1038,7 @@
                 reason: "Closed from Spark Web",
               });
       if (data.window.snapshot.sessionId !== ownerSessionId) return;
+      void invalidate("spark:navigation");
       treeSessionsOverride = {
         ownerSessionId,
         sessions: treeSessions.map((item) =>

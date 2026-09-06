@@ -12,6 +12,7 @@ vi.mock("$lib/web-rpc", () => ({ webRpc }));
 function settingsData(): ComponentProps<typeof SettingsPage>["data"] {
   return {
     locale: "zh-CN",
+    navigation: { workspaces: [], sessions: [], unavailable: false },
     messages: getDictionary("zh-CN"),
     catalog: {
       providers: [

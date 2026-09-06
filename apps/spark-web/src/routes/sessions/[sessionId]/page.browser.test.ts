@@ -2,7 +2,7 @@ import "@zendev-lab/spark-ui/tokens.css";
 import { render } from "vitest-browser-svelte";
 import { page, userEvent } from "vitest/browser";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ComponentProps } from "svelte";
+import { tick, type ComponentProps } from "svelte";
 
 const mocks = vi.hoisted(() => ({
   attachWebSessionEvents: vi.fn(
@@ -15,10 +15,11 @@ const mocks = vi.hoisted(() => ({
         undefined,
   ),
   goto: vi.fn(),
+  invalidate: vi.fn(),
   webRpc: vi.fn(),
 }));
 
-vi.mock("$app/navigation", () => ({ goto: mocks.goto }));
+vi.mock("$app/navigation", () => ({ goto: mocks.goto, invalidate: mocks.invalidate }));
 vi.mock("$lib/live-events", () => ({
   attachWebSessionEvents: mocks.attachWebSessionEvents,
 }));
@@ -228,6 +229,7 @@ function earlierPage(sessionId: string, messageId: string, text: string) {
 afterEach(() => {
   mocks.attachWebSessionEvents.mockClear();
   mocks.goto.mockReset();
+  mocks.invalidate.mockReset();
   mocks.webRpc.mockReset();
   vi.restoreAllMocks();
 });
@@ -278,6 +280,28 @@ describe("Session page owner state", () => {
     await expect
       .element(screen.getByRole("textbox", { name: "Prompt" }))
       .toHaveValue("After reconnect");
+    await screen.unmount();
+  });
+
+  it("refreshes the sidebar on activity transitions without reloading it for every streaming snapshot", async () => {
+    mocks.webRpc.mockResolvedValue({ waits: [] });
+    const data = sessionData("activity");
+    const screen = await render(SessionPage, { data });
+    const onSnapshot = mocks.attachWebSessionEvents.mock.calls.at(-1)?.[1] as (
+      window: SessionPageData["window"],
+    ) => void;
+    onSnapshot({ ...data.window, snapshot: { ...data.window.snapshot, status: "running" } });
+    await tick();
+    expect(mocks.invalidate).toHaveBeenCalledExactlyOnceWith("spark:navigation");
+    onSnapshot({
+      ...data.window,
+      snapshot: { ...data.window.snapshot, status: "running", updatedAt: "2026-09-06T00:00:01Z" },
+    });
+    await tick();
+    expect(mocks.invalidate).toHaveBeenCalledTimes(1);
+    onSnapshot(data.window);
+    await tick();
+    expect(mocks.invalidate).toHaveBeenCalledTimes(2);
     await screen.unmount();
   });
 
