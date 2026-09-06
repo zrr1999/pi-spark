@@ -41,10 +41,21 @@ unclean launcher exit or when a managed token is no longer needed.
 The printed URL is a bearer secret until the startup token is revoked. Do not
 share terminal output or the uncleaned link.
 
-Opening a printed URL verifies the token through the daemon, stores it in an
-HttpOnly, SameSite=Lax cookie, removes it from the address bar, and continues to
-the requested page. Document navigation without a valid token opens the Spark
-Access page for manual entry. The `?token=…` carrier is navigation-only; API and
+Opening a printed URL exchanges the startup token through the daemon for a
+15-minute access token and a 7-day refresh token, removes the URL token, and
+continues to the requested page. Both browser tokens use persistent HttpOnly,
+SameSite=Lax cookies (Secure on HTTPS). When access expires, active use rotates
+both tokens and starts another 7-day refresh period. The daemon stores only
+hashes in its database. Valid older startup-token cookies upgrade automatically.
+
+Browser login survives Web and daemon restarts against the same state directory;
+normal Web shutdown revokes only its startup token. Seven days without renewal,
+explicit browser-session revocation, or clearing cookies requires authentication
+again. `spark daemon access list` includes browser sessions; revoke the current
+session ID to invalidate both tokens. Web and Hub share token issuance and atomic
+refresh rotation code, while keeping distinct credential families and owners.
+Document navigation without valid browser credentials opens the Spark Access
+page for manual entry. The `?token=…` carrier is navigation-only; API and
 WebSocket requests do not receive HTML
 login pages: unauthenticated requests retain carrier-level 401/503 responses.
 Missing, wrong, expired, and revoked tokens do not expose token-state detail,
@@ -152,9 +163,9 @@ does not change the submitted user message. Retrying an unchanged message after
 a lost submission response reuses its idempotency key. The home composer also
 reuses a Session it already created when the first submission failed.
 
-Restarting Spark Web reconnects to the existing daemon. If normal shutdown
-revoked the previous process token, open the newly printed URL. Local Share
-links do not survive a Web process restart.
+Restarting Spark Web reconnects to the existing daemon and retains browser login
+through its persistent refresh cookie. Local Share links do not survive a Web
+process restart.
 
 ## Session attach
 

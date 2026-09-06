@@ -34,9 +34,16 @@ spark web --host 0.0.0.0 --port 4310
 异常退出后或不再需要长期 token 时，用 `spark daemon access revoke` 吊销。
 启动 token 被吊销前，终端打印的 URL 属于 bearer secret；不要分享终端输出或尚未清理的链接。
 
-打开终端打印的 URL 后，Spark 会通过 daemon 校验 token，写入 HttpOnly、SameSite=Lax
-cookie，从地址栏移除 token，再进入目标页面。没有有效 token 的页面导航会进入统一的
-Spark Access 页面供手工输入。`?token=…` 只用于页面导航；API 与 WebSocket 请求不会收到
+首次打开终端打印的 URL 后，Spark 会通过 daemon 将启动 token 换成 15 分钟有效的 access token
+和 7 天有效的 refresh token，并从地址栏移除启动 token。两者均保存在持久 HttpOnly、SameSite=Lax
+cookie 中，HTTPS 下启用 Secure。access token 到期后，活跃使用会自动轮换两种凭据，refresh token
+的有效期随之延长为新的 7 天；daemon 数据库只保存哈希。已有的有效启动 token cookie 会自动升级。
+
+使用同一状态目录重启 Web 或 daemon 不需要重新认证，Web 正常退出仅撤销启动 token。
+连续 7 天未续期、主动撤销浏览器会话或清除 cookie 后才需要重新认证。
+`spark daemon access list` 也会列出浏览器会话，撤销当前会话 ID 会使其两种凭据失效。
+Web 与 Hub 复用凭据签发和原子刷新逻辑，但凭据家族、存储与权限归属保持独立。
+没有有效浏览器凭据的页面导航会进入 Spark Access 页面供手工输入。`?token=…` 只用于页面导航；API 与 WebSocket 请求不会收到
 HTML 登录页，未认证时仍返回 transport-level 401/503。缺失、
 错误、过期和已吊销 token 不暴露具体 token 状态；daemon 不可达时 fail closed。
 
@@ -121,8 +128,8 @@ daemon 意外退出后，请使用同一状态目录重新启动。daemon 会以
 控制，不会改变用户提交的消息。提交响应丢失后重试未改动的消息，会复用幂等键；
 首页在第一条消息提交失败后，也会复用已经创建成功的 Session。
 
-重启 Spark Web 会重新连接原有 daemon。如果正常退出已撤销旧进程 token，请打开
-新打印的 URL。Local Share 链接不会跨 Web 进程重启保留。
+重启 Spark Web 会重新连接原有 daemon，通过持久 refresh cookie 保留登录状态。
+Local Share 链接不会跨 Web 进程重启保留。
 
 ## 会话 attach
 

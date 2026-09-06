@@ -1,3 +1,4 @@
+import type { SparkLocalRpcOutput } from "@zendev-lab/spark-protocol";
 import {
   requestSparkDaemon,
   resolveSparkWebRequestTrustFailure,
@@ -23,15 +24,17 @@ export const SPARK_WEB_BIND_PORT_ENV = "SPARK_WEB_BIND_PORT";
 
 /**
  * Spark Web is an authentication adapter, not a token owner. The daemon owns
- * the `daemon-user` token family (hashed storage, expiry, revocation); this
- * surface only presents a token and asks the daemon to verify it. Every normal
- * request requires a valid daemon-user token regardless of its TCP peer.
+ * bootstrap and browser-session credentials (hashed storage, expiry, revocation).
+ * This surface presents credentials to the daemon and persists its issued
+ * access/refresh pair in cookies; it never maintains a credential database.
  */
 export type SparkWebTokenVerifier = (token: string) => Promise<SparkWebTokenVerification>;
 
 async function verifySparkWebTokenWithDaemon(token: string): Promise<SparkWebTokenVerification> {
   try {
-    const result = await requestSparkDaemon("daemon.access.verify", { token });
+    const result = token.startsWith("spark_web_access_")
+      ? await requestSparkDaemon("daemon.access.session", { action: "verify", token })
+      : await requestSparkDaemon("daemon.access.verify", { token });
     return result.valid ? "valid" : "invalid";
   } catch {
     return "unavailable";
@@ -136,5 +139,38 @@ function requestTrustError(
       return "Spark web requires same-origin metadata for cookie-authenticated mutations";
     default:
       return null;
+  }
+}
+
+export const SPARK_WEB_REFRESH_COOKIE = "spark_web_refresh";
+export type SparkWebBrowserSession = NonNullable<
+  SparkLocalRpcOutput<"daemon.access.session">["session"]
+>;
+type BrowserSessionClient = (
+  action: "exchange" | "refresh",
+  token: string,
+) => Promise<SparkLocalRpcOutput<"daemon.access.session">>;
+const defaultBrowserSessionClient: BrowserSessionClient = (action, token) =>
+  requestSparkDaemon("daemon.access.session", { action, token });
+let browserSessionClient = defaultBrowserSessionClient;
+
+export function setSparkWebBrowserSessionClient(client?: BrowserSessionClient): void {
+  browserSessionClient = client ?? defaultBrowserSessionClient;
+}
+
+export async function resolveSparkWebBrowserSession(
+  action: "exchange" | "refresh",
+  token: string,
+): Promise<{
+  verification: SparkWebTokenVerification;
+  session?: SparkWebBrowserSession;
+}> {
+  try {
+    const result = await browserSessionClient(action, token);
+    return result.valid && result.session
+      ? { verification: "valid", session: result.session }
+      : { verification: "invalid" };
+  } catch {
+    return { verification: "unavailable" };
   }
 }
