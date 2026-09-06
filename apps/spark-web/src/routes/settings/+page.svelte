@@ -198,22 +198,34 @@
   </Panel>
 
   <Panel title={copy.providers} id="providers-heading">
-    <div class="provider-grid">
+    <div class="provider-list">
       {#each catalog.providers as provider (provider.providerName)}
-        <article>
-          <header><div><h3>{provider.label}</h3><code>{provider.providerName}</code></div><StatusPill label={provider.auth.configured ? copy.configured : copy.notConfigured} tone={provider.auth.configured ? "success" : "neutral"} /></header>
-          {#if provider.auth.reference}<p>{copy.source}: {provider.auth.reference}</p>{/if}
-          {#if provider.auth.kind === "api_key"}
-            <form onsubmit={(event) => { event.preventDefault(); void saveKey(provider.providerName); }}>
-              <Field id={`api-key-${provider.providerName}`} label={copy.apiKey} reserveMeta={false}>
-                <Input id={`api-key-${provider.providerName}`} type="password" autocomplete="new-password" bind:value={keyByProvider[provider.providerName]} />
-              </Field>
-              <Button type="submit" disabled={Boolean(busy)}>{copy.saveKey}</Button>
-            </form>
-          {:else if provider.auth.kind === "oauth"}
-            <Button href={oauthHref(provider.providerName)}>{copy.startOAuth}</Button>
-          {/if}
-          {#if provider.auth.configured}<Button variant="danger" disabled={Boolean(busy)} onclick={() => void logout(provider.providerName)}>{copy.logout}</Button>{/if}
+        <article class="provider-row" aria-labelledby={`provider-title-${provider.providerName}`}>
+          <header class="provider-info">
+            <h3 id={`provider-title-${provider.providerName}`}>{provider.label}</h3>
+            <StatusPill label={provider.auth.configured ? copy.configured : copy.notConfigured} tone={provider.auth.configured ? "success" : "neutral"} />
+            <code>{provider.providerName}</code>
+            {#if provider.auth.reference}<p>{copy.source}: {provider.auth.reference}</p>{/if}
+          </header>
+          <div class="provider-controls">
+            {#if provider.auth.kind === "api_key"}
+              <form id={`provider-key-form-${provider.providerName}`} onsubmit={(event) => { event.preventDefault(); void saveKey(provider.providerName); }}>
+                <Field id={`api-key-${provider.providerName}`} label={copy.apiKey} reserveMeta={false}>
+                  <Input id={`api-key-${provider.providerName}`} type="password" autocomplete="new-password" bind:value={keyByProvider[provider.providerName]} />
+                </Field>
+              </form>
+            {/if}
+            <div class="provider-actions">
+              {#if provider.auth.configured}
+                <Button variant="danger" disabled={Boolean(busy)} onclick={() => void logout(provider.providerName)}>{copy.logout}</Button>
+              {/if}
+              {#if provider.auth.kind === "api_key"}
+                <Button type="submit" form={`provider-key-form-${provider.providerName}`} disabled={Boolean(busy)}>{copy.saveKey}</Button>
+              {:else if provider.auth.kind === "oauth"}
+                <Button href={oauthHref(provider.providerName)}>{copy.startOAuth}</Button>
+              {/if}
+            </div>
+          </div>
         </article>
       {/each}
     </div>
@@ -251,28 +263,44 @@
 />
 
 <style>
-  .provider-grid :global(input) { scroll-margin-top: 180px; }
+  .provider-list :global(input) { scroll-margin-top: 180px; }
   h3, p { margin: 0; }
-  article, form { display: grid; gap: var(--spacing-sm); }
+  form { display: grid; gap: var(--spacing-sm); align-content: start; }
   article p { color: var(--color-ink-muted); }
-  .provider-grid { display: grid; gap: var(--spacing-md); grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+  .provider-list { display: grid; }
+  .provider-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    align-items: start;
+    gap: var(--spacing-lg);
+    padding-block: var(--spacing-lg);
+  }
+  .provider-row:first-child { padding-top: 0; }
+  .provider-row:last-child { padding-bottom: 0; }
+  .provider-row + .provider-row { border-top: 1px solid var(--color-border-soft); }
+  .provider-info { display: grid; gap: var(--spacing-xs); justify-items: start; min-width: 0; }
+  .provider-info h3 { font-size: var(--text-card-title); }
+  .provider-info code, .provider-info p { font-size: var(--text-caption); overflow-wrap: anywhere; }
+  .provider-controls { display: grid; gap: var(--spacing-sm); min-width: 0; }
+  .provider-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: end; gap: var(--spacing-sm); }
+  .provider-actions :global(.ui-button) { min-width: 8rem; align-self: start; }
+
   .model-grid { display: grid; gap: var(--spacing-md); grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
   .policy-row { align-items: end; display: grid; gap: var(--spacing-sm); grid-template-columns: minmax(0, 1fr) auto; }
-  .policy-row > :global(.ui-button),
+  .policy-row > :global(.ui-button) { justify-self: start; align-self: end; }
   :global(.panel-action),
-  form > :global(.ui-button),
-  article > :global(.ui-button) { justify-self: start; }
-  article { background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--rounded-lg); padding: var(--spacing-lg); }
-  article > header { align-items: start; display: flex; justify-content: space-between; }
-  article > header div { display: grid; gap: 3px; }
+  form > :global(.ui-button) { justify-self: start; align-self: start; }
   fieldset { border: 0; margin: 0; padding: 0; }
   legend { font-weight: var(--weight-card-title); margin-bottom: var(--spacing-sm); }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--spacing-sm); }
   .diagnostics { color: var(--color-warning-strong); }
   dl { display: grid; gap: 5px; margin: 0; }
   dl div { display: grid; gap: 8px; grid-template-columns: 110px minmax(0, 1fr); }
   dt { color: var(--color-ink-muted); }
   dd { margin: 0; overflow-wrap: anywhere; }
-  @media (max-width: 900px) { .provider-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) {
+    .provider-row { grid-template-columns: minmax(0, 1fr); gap: var(--spacing-md); }
+    .provider-actions { justify-content: start; }
+  }
   @media (max-width: 640px) { .model-grid, .policy-row { grid-template-columns: 1fr; } }
 </style>
