@@ -146,6 +146,37 @@ it("pins recognizable QQ branding, removes global actions, and scopes each new c
   expect(first.textContent).not.toContain("qqbot:c2c:");
   const icon = first.querySelector("img")!;
   await expect.poll(() => icon.complete && icon.naturalWidth > 0).toBe(true);
+  input.data.channelAdapters = [
+    {
+      id: "qqbot",
+      type: "qqbot",
+      running: true,
+      state: "connected",
+      botProfile: { displayName: "Test assistant", avatarUrl: icon.src },
+    },
+  ];
+  await screen.rerender(input);
+  expect(first.textContent).toContain("Test assistant");
+  expect(first.textContent).toContain("QQ chat · 7B047099…");
+  const avatar = first.querySelector<HTMLImageElement>(".bot-avatar")!;
+  await expect.poll(() => avatar.complete && avatar.naturalWidth > 0).toBe(true);
+  await screen.rerender({
+    ...input,
+    data: {
+      ...input.data,
+      channelAdapters: [
+        {
+          ...input.data.channelAdapters[0]!,
+          botProfile: { displayName: "Test assistant", avatarUrl: "/missing-bot-avatar.png" },
+        },
+      ],
+    },
+  });
+  await expect.poll(() => first.querySelector(".bot-avatar")).toBeNull();
+  const fallback = first.querySelector("img")!;
+  await expect.poll(() => fallback.complete && fallback.naturalWidth > 0).toBe(true);
+  expect(first.textContent).toContain("Test assistant");
+
   await expect
     .element(screen.getByRole("link", { name: "All conversations", exact: true }))
     .not.toBeInTheDocument();

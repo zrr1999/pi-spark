@@ -1065,6 +1065,12 @@ export const sparkLocalRpcChannelStatusSchema = z.object({
       id: z.string().min(1),
       type: z.string().min(1),
       adapterAccountIdentity: z.string().min(1).optional(),
+      botProfile: z
+        .object({
+          displayName: z.string().optional(),
+          avatarUrl: z.url().startsWith("https://").optional(),
+        })
+        .optional(),
       running: z.boolean(),
       state: z.enum(["stopped", "connecting", "connected", "reconnecting", "degraded"]),
       error: z.string().optional(),

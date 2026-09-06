@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   sidebarChannels,
+  sidebarBotProfile,
   sidebarGroups,
   visibleSidebarSessions,
   type SidebarSession,
@@ -85,4 +86,39 @@ it("pins bound channel conversations ahead of workspace groups without leaking t
       .flatMap((group) => group.sessions)
       .map((session) => session.sessionId),
   ).toEqual(["recent"]);
+});
+
+it("resolves bot identity by stable account without falling through to a different account", () => {
+  const session = sidebarSession("qq", {
+    name: "channel qqbot:c2c:openid",
+    bindings: [
+      {
+        kind: "channel",
+        adapter: "qqbot",
+        adapterId: "old-name",
+        adapterAccountIdentity: "account-a",
+        externalKey: "qqbot:c2c:openid",
+      },
+    ],
+  });
+  const a = {
+    id: "new-name",
+    type: "qqbot",
+    adapterAccountIdentity: "account-a",
+    running: true,
+    state: "connected" as const,
+    botProfile: { displayName: "A" },
+  };
+  const b = {
+    ...a,
+    id: "old-name",
+    adapterAccountIdentity: "account-b",
+    botProfile: { displayName: "B" },
+  };
+  const data = { unavailable: false, workspaces: [], sessions: [], channelAdapters: [a, b] };
+  expect(sidebarBotProfile(session, data)?.displayName).toBe("A");
+  expect(sidebarBotProfile(session, { ...data, channelAdapters: [b] })).toBeUndefined();
+  const legacy = { ...session, bindings: [] };
+  expect(sidebarBotProfile(legacy, data)).toBeUndefined();
+  expect(sidebarBotProfile(legacy, { ...data, channelAdapters: [a] })?.displayName).toBe("A");
 });

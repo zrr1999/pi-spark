@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ChannelSessionIcon, Icon } from "@zendev-lab/spark-ui";
-  import { sidebarChannels, sidebarGroups, visibleSidebarSessions, type SidebarData } from "./sidebar";
+  import { sidebarBotProfile, sidebarChannels, sidebarGroups, visibleSidebarSessions, type SidebarData } from "./sidebar";
   import { channelSessionPresentation, formatChannelSessionTitle } from "@zendev-lab/spark-ui/channel-session";
   import type { getDictionary } from "./i18n";
 
@@ -25,11 +25,12 @@
       <ul class="pinned-channels" aria-label={copy.channelConversations}>
         {#each channels as session (session.sessionId)}
           {@const presentation = channelSessionPresentation(session, { fallback: messages.web.home.sessionUntitled, labels: copy.channelLabels })}
+          {@const bot = sidebarBotProfile(session, data)}
           {@const title = formatChannelSessionTitle(session.name, { fallback: presentation.channel?.label ?? messages.web.home.sessionUntitled, labels: copy.channelLabels })}
           <li>
             <a class="session-link channel-link" draggable="false" href="/sessions/{encodeURIComponent(session.sessionId)}" aria-current={session.sessionId === selectedSessionId ? "page" : undefined} title={title} onclick={closeNavigation}>
-              {#if presentation.channel}<ChannelSessionIcon adapter={presentation.channel.adapter} scope={presentation.channel.scope} label={presentation.channel.label} />{:else}<Icon name="message" size={18} />{/if}
-              <span class="session-title">{title}</span>
+              {#if presentation.channel}<ChannelSessionIcon adapter={presentation.channel.adapter} scope={presentation.channel.scope} label={presentation.channel.label} avatarUrl={bot?.avatarUrl} />{:else}<Icon name="message" size={18} />{/if}
+              <span class="channel-text"><span class="session-title">{bot?.displayName ?? title}</span>{#if bot?.displayName}<span class="channel-detail">{title}</span>{/if}</span>
               {#if session.activity === "running" || session.activity === "queued"}<span class="activity" class:running={session.activity === "running"} role="img" aria-label={messages.shared.status[session.activity] ?? session.activity}></span>{/if}
             </a>
           </li>
@@ -121,7 +122,8 @@
   .nav-link { color: var(--color-ink-muted); font-size: var(--text-body); font-weight: var(--weight-body-medium); }
   .pinned-channels { margin-bottom: var(--spacing-lg); }
   .channel-link { padding-inline-start: var(--spacing-sm); gap: var(--spacing-sm); }
-  .channel-link .session-title { flex: 1; }
+  .channel-text { display: grid; min-width: 0; flex: 1; padding-block: var(--spacing-xxs); gap: 2px; }
+  .channel-detail { color: var(--color-ink-subtle); font-size: var(--text-caption); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .new-in-workspace { display: flex; align-items: center; justify-content: center; flex: 0 0 28px; height: 32px; border-radius: var(--rounded-xs); color: var(--color-ink-subtle); }
   .workspace-group + .workspace-group { margin-top: var(--spacing-lg); }
   .group-heading { align-items: center; display: flex; gap: 2px; margin-bottom: var(--spacing-xxs); }

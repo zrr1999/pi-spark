@@ -1,4 +1,8 @@
-import { sessionHasChannelBinding } from "@zendev-lab/spark-ui/channel-session";
+import type { SparkLocalRpcOutput } from "@zendev-lab/spark-protocol/local-rpc-orpc-contract";
+import {
+  channelSessionPresentation,
+  sessionHasChannelBinding,
+} from "@zendev-lab/spark-ui/channel-session";
 import type { SparkSessionProjection } from "@zendev-lab/spark-protocol";
 import {
   isWorkspaceAdministrator,
@@ -19,6 +23,7 @@ export type SidebarSession = Pick<
   | "bindings"
 >;
 export type SidebarData = {
+  channelAdapters?: SparkLocalRpcOutput<"channel.status">["adapters"];
   workspaces: SparkWebWorkspace[];
   sessions: SidebarSession[];
   unavailable: boolean;
@@ -73,4 +78,18 @@ export function visibleSidebarSessions(
 ) {
   if (expanded) return sessions;
   return sessions.filter((session, index) => index < 5 || session.sessionId === selectedSessionId);
+}
+
+export function sidebarBotProfile(session: SidebarSession, data: SidebarData) {
+  const binding = session.bindings?.find((entry) => entry.kind === "channel");
+  const type =
+    binding?.adapter ?? channelSessionPresentation(session, { fallback: "" }).channel?.adapter;
+  let accounts = (data.channelAdapters ?? []).filter((adapter) => adapter.type === type);
+  if (binding?.adapterAccountIdentity)
+    accounts = accounts.filter(
+      (adapter) => adapter.adapterAccountIdentity === binding.adapterAccountIdentity,
+    );
+  else if (binding?.adapterId)
+    accounts = accounts.filter((adapter) => adapter.id === binding.adapterId);
+  return accounts.length === 1 ? accounts[0]?.botProfile : undefined;
 }

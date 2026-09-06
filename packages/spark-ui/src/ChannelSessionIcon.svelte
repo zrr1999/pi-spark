@@ -12,11 +12,16 @@
     adapter,
     scope,
     label,
+    avatarUrl,
   }: {
     adapter: ChannelSessionAdapter;
     scope: ChannelSessionScope;
     label: string;
+    avatarUrl?: string;
   } = $props();
+
+  let failedAvatarUrl = $state<string | undefined>();
+  let avatar = $derived(avatarUrl && avatarUrl !== failedAvatarUrl ? avatarUrl : undefined);
 
   let adapterIcon = $derived<IconName>(
     adapter === "qqbot" ? "agents" : adapter === "feishu" ? "send" : "waves",
@@ -39,7 +44,9 @@
   aria-label={label}
   title={label}
 >
-  {#if adapter === "qqbot"}
+  {#if avatar}
+    <img class="bot-avatar" src={avatar} width="22" height="22" alt="" draggable="false" referrerpolicy="no-referrer" onerror={() => failedAvatarUrl = avatarUrl} />
+  {:else if adapter === "qqbot"}
     <img src={qqLogo} width="18" height="18" alt="" draggable="false" />
   {:else}
     <Icon name={adapterIcon} size={14} stroke={2.1} />
@@ -65,6 +72,8 @@
     position: relative;
     width: 22px;
   }
+
+  .bot-avatar { border-radius: inherit; object-fit: cover; }
 
   .channel-session-icon.qqbot {
     --channel-color: #1677d2;
