@@ -48,6 +48,9 @@ describe("conversation navigation", () => {
     const settings = screen.getByRole("link", { name: "Settings", exact: true });
     await expect.element(settings).toBeVisible();
     const footer = screen.container.querySelector<HTMLElement>(".navigation-footer")!;
+    await expect
+      .element(screen.getByRole("link", { name: "Add a Workspace", exact: true }))
+      .toHaveAttribute("href", "/?setup=workspace#workspace-setup");
     const originalBottom = footer.getBoundingClientRect().bottom;
     expect(Math.abs(nav.getBoundingClientRect().bottom - originalBottom)).toBeLessThanOrEqual(12);
     expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);

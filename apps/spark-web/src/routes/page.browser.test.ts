@@ -303,3 +303,28 @@ it("starts in the workspace selected by its sidebar plus rather than the launch 
     });
   await screen.unmount();
 });
+
+it("opens workspace setup from the sidebar and registers a workspace with retry", async () => {
+  const data = { ...dashboardData(), setupWorkspace: true };
+  mocks.webRpc
+    .mockRejectedValueOnce(new Error("Directory is unavailable"))
+    .mockResolvedValueOnce({ id: "new-workspace" });
+  const screen = await render(DashboardPage, { data });
+  const path = screen.getByRole("textbox", { name: "Local path" });
+  await expect.element(path).toBeVisible();
+  await expect.element(path).toHaveFocus();
+  await path.fill("/projects/new-workspace");
+  await screen.getByRole("textbox", { name: "Display name" }).fill("New workspace");
+  await screen.getByRole("button", { name: "Add workspace", exact: true }).click();
+  await expect.element(screen.getByText("Directory is unavailable")).toBeVisible();
+  expect(mocks.goto).not.toHaveBeenCalled();
+  await screen.getByRole("button", { name: "Add workspace", exact: true }).click();
+  await expect
+    .poll(() => mocks.webRpc)
+    .toHaveBeenLastCalledWith("workspace.register", {
+      localPath: "/projects/new-workspace",
+      displayName: "New workspace",
+    });
+  await expect.poll(() => mocks.goto).toHaveBeenCalledWith("/workspaces/new-workspace");
+  await screen.unmount();
+});

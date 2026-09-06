@@ -79,8 +79,8 @@ const en = {
     displayName: "Display name",
     optional: "optional",
     localPathRequired: "Local path is required.",
-    register: "Register",
-    registering: "Registering…",
+    register: "Add workspace",
+    registering: "Adding…",
   },
   sessions: {
     title: "Sessions",
@@ -527,7 +527,7 @@ const zhCN = {
     displayName: "显示名称",
     optional: "可选",
     localPathRequired: "请填写本地路径。",
-    register: "注册",
+    register: "添加工作空间",
     registering: "注册中…",
   },
   sessions: {

@@ -179,3 +179,5 @@ Channel conversations appear above workspace groups in the sidebar, with shared 
 The composer separates editing, attachments, and send controls. Empty attachment areas take no space, and the outer border shows keyboard focus. The status bar displays working directories relative to the current workspace, shortening middle segments in long paths; hover to inspect the complete directory. Locations outside the workspace retain absolute-path semantics.
 
 QQ channel rows use the connected bot’s name and avatar from QQ’s bot profile API. The daemon reads this optional metadata; credentials stay on the daemon. If the profile or avatar cannot load, the sidebar keeps the channel name or QQ icon. Account identity prevents mixing profiles across bots.
+
+Use **Add a Workspace** above Settings in the sidebar to open the workspace form directly. Enter its local directory and an optional display name; Spark opens the workspace after it is added.

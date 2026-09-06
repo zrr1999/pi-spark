@@ -27,6 +27,7 @@ export const load: PageServerLoad = async ({ url }) => {
     ...dashboard,
     cwdWorkspaceId,
     requestedWorkspaceId,
+    setupWorkspace: url.searchParams.get("setup") === "workspace",
     launchCwd,
   };
 };

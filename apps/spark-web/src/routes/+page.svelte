@@ -70,6 +70,12 @@
     }
   });
 
+  $effect(() => {
+    if (data.setupWorkspace) {
+      requestAnimationFrame(() => document.getElementById("workspace-local-path")?.focus());
+    }
+  });
+
   function workspaceLabel(session: SparkWebSession): string {
     const workspaceId = sessionWorkspaceId(session);
     if (!workspaceId) return copy.generalContext;
@@ -148,6 +154,7 @@
 
   async function registerWorkspace(event: SubmitEvent) {
     event.preventDefault();
+    if (registering) return;
     const path = localPath.trim();
     if (!path) {
       registerError = copy.localPathRequired;
@@ -293,7 +300,7 @@
     />
   {/if}
 
-  <details class="workspace-setup" open={data.workspaces.length === 0}>
+  <details id="workspace-setup" class="workspace-setup" open={data.setupWorkspace || data.workspaces.length === 0}>
     <summary>
       <span><Icon name="folder" size={17} />{copy.workspaceSetupTitle}</span>
       <small>{copy.workspaceSetupBody}</small>

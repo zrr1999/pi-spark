@@ -86,6 +86,9 @@
     {/if}
   </div>
   <div class="navigation-footer">
+    <a class="nav-link" href="/?setup=workspace#workspace-setup" onclick={closeNavigation}>
+      <Icon name="plus" size={18} /><span>{messages.web.home.workspaceSetupTitle}</span>
+    </a>
     <a class="nav-link" href="/settings" aria-current={pathname.startsWith("/settings") ? "page" : undefined} onclick={closeNavigation}>
       <Icon name="settings" size={18} /><span>{copy.settings}</span>
     </a>
