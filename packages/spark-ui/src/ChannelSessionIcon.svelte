@@ -23,9 +23,7 @@
   let failedAvatarUrl = $state<string | undefined>();
   let avatar = $derived(avatarUrl && avatarUrl !== failedAvatarUrl ? avatarUrl : undefined);
 
-  let adapterIcon = $derived<IconName>(
-    adapter === "qqbot" ? "agents" : adapter === "feishu" ? "send" : "waves",
-  );
+  let adapterIcon = $derived<IconName>(adapter === "feishu" ? "send" : "waves");
   let scopeKind = $derived(channelSessionScopeKind(adapter, scope));
   let scopeIcon = $derived<IconName>(
     scopeKind === "private"
@@ -113,10 +111,6 @@
 
   .scope-group {
     --scope-color: var(--color-purple);
-  }
-
-  .scope-group .scope-icon {
-    border-radius: 4px;
   }
 
   .scope-channel {

@@ -36,9 +36,9 @@ export function conversationMessagesFromViews(
   let openParts: ConversationPart[] | undefined;
   for (const message of messages) {
     const view = conversationMessageFromView(message);
-    const parts: ConversationPart[] = view.parts
-      .flatMap((part) => (part.type === "chain" ? part.steps : [part]))
-      .map((part) => (part.type === "image" ? { ...part, sourceMessageId: message.id } : part));
+    const parts: ConversationPart[] = view.parts.map((part) =>
+      part.type === "image" ? { ...part, sourceMessageId: message.id } : part,
+    );
     const lastTool = parts.findLastIndex((part) => part.type === "tool");
     // Text preceding a tool call is its preamble; only trailing text is an answer.
     for (let index = 0; index < lastTool; index++) {
@@ -65,7 +65,7 @@ export function conversationMessagesFromViews(
       (process || group.parts.some((part) => part.type === "chain"));
     if (merge && group && openParts) {
       openParts.push(...parts);
-      openParts = mergeToolParts(openParts);
+      if (parts.some((part) => part.type === "tool")) openParts = mergeToolParts(openParts);
       group.parts = groupThinkingChainParts(openParts);
       group.sourceMessageIds.push(message.id);
       group.status = view.status;

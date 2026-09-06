@@ -50,6 +50,7 @@
   );
   let cost = $derived(formatSessionCost(costUsd && costUsd > 0 ? costUsd : undefined));
   let context = $derived(formatContextUsage(contextTokens, contextWindow));
+  let branch = $derived(gitBranch?.trim() || undefined);
   let hasUsage = $derived(Boolean(input || output || cacheRead || cacheWrite || cacheHit || cost || context));
   let statusDescription = $derived(
     describeSessionStatus(labels, {
@@ -78,12 +79,8 @@
 >
   <div class="workspace-context" title={`${labels.workingDirectory}: ${cwd}`}>
     <span class="cwd">{formatSessionWorkingDirectory(cwd, workspacePath)}</span>
-    {#if gitBranch?.trim()}
-      <span
-        class="branch"
-        data-priority="low"
-        title={`${labels.branch}: ${gitBranch.trim()}`}
-      >({gitBranch.trim()})</span>
+    {#if branch}
+      <span class="branch" data-priority="low" title={`${labels.branch}: ${branch}`}>({branch})</span>
     {/if}
   </div>
 

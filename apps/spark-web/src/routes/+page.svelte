@@ -58,16 +58,14 @@
   });
 
   $effect(() => {
-    if (selectedWorkspaceId && workspaceById.has(selectedWorkspaceId)) return;
-    selectedWorkspaceId = data.cwdWorkspaceId ?? data.workspaces[0]?.id ?? "";
-  });
-
-  $effect(() => {
     const requested = data.requestedWorkspaceId;
     if (requested) {
       selectedWorkspaceId = requested;
       requestAnimationFrame(() => document.getElementById("spark-web-first-message")?.focus({ preventScroll: true }));
+      return;
     }
+    if (selectedWorkspaceId && workspaceById.has(selectedWorkspaceId)) return;
+    selectedWorkspaceId = data.cwdWorkspaceId ?? data.workspaces[0]?.id ?? "";
   });
 
   $effect(() => {

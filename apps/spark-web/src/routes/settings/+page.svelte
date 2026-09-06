@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type {
-    SparkModelControlSnapshot,
-    SparkModelRef,
+  import {
+    sparkModelValue,
+    type SparkModelControlSnapshot,
+    type SparkModelRef,
   } from "@zendev-lab/spark-protocol";
   import {
     Button,
@@ -49,7 +50,7 @@
       options: [
         { value: "", label: copy.chooseDefault },
         ...allModels.map((entry) => ({
-          value: modelValue(entry.model),
+          value: sparkModelValue(entry.model),
           label: `${entry.model.modelLabel ?? entry.model.modelId} · ${entry.model.providerLabel ?? entry.model.providerName}`,
           disabled: !entry.available,
         })),
@@ -59,17 +60,13 @@
 
   $effect(() => {
     if (modelPolicyInitialized) return;
-    enabledValues = catalog.enabledModels?.map(modelValue) ?? [];
-    defaultValue = catalog.defaultModel ? modelValue(catalog.defaultModel) : "";
+    enabledValues = catalog.enabledModels?.map(sparkModelValue) ?? [];
+    defaultValue = catalog.defaultModel ? sparkModelValue(catalog.defaultModel) : "";
     modelPolicyInitialized = true;
   });
 
-  function modelValue(model: SparkModelRef) {
-    return `${model.providerName}/${model.modelId}`;
-  }
-
   function modelForValue(value: string): SparkModelRef | undefined {
-    return allModels.find((entry) => modelValue(entry.model) === value)?.model;
+    return allModels.find((entry) => sparkModelValue(entry.model) === value)?.model;
   }
 
   async function run(label: string, operation: () => Promise<string | void>) {
@@ -109,7 +106,7 @@
     if (!model) return;
     await run("Default model", async () => {
       catalogOverride = await webRpc("model.default.set", { model });
-      return `Default model set to ${modelValue(model)}.`;
+      return `Default model set to ${sparkModelValue(model)}.`;
     });
   }
 
@@ -180,8 +177,8 @@
     <fieldset>
       <legend>{copy.enabledModels}</legend>
       <div class="model-grid">
-        {#each allModels as entry (modelValue(entry.model))}
-          {@const value = modelValue(entry.model)}
+        {#each allModels as entry (sparkModelValue(entry.model))}
+          {@const value = sparkModelValue(entry.model)}
           <Checkbox
             id={`enabled-model-${value.replaceAll(/[^a-zA-Z0-9_-]/g, "-")}`}
             label={entry.model.modelLabel ?? entry.model.modelId}

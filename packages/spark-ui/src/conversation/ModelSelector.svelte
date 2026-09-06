@@ -256,7 +256,12 @@
     transition:
       background var(--motion-fast) ease,
       border-color var(--motion-fast) ease,
-      box-shadow var(--motion-fast) ease;
+      box-shadow var(--motion-fast) ease,
+      transform var(--motion-fast) var(--ease-out);
+  }
+
+  :global(.model-picker-trigger:active:not(:disabled)) {
+    transform: scale(0.97);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -383,10 +388,12 @@
     width: 32px;
   }
 
-  :global(.model-picker-close:hover),
-  .clear-search:hover {
-    background: var(--color-surface-soft);
-    color: var(--color-ink);
+  @media (hover: hover) and (pointer: fine) {
+    :global(.model-picker-close:hover),
+    .clear-search:hover {
+      background: var(--color-surface-soft);
+      color: var(--color-ink);
+    }
   }
 
   :global(.model-picker-command) {
@@ -461,8 +468,10 @@
     flex: 1;
   }
 
-  .provider-settings:hover {
-    background: var(--color-surface-soft);
+  @media (hover: hover) and (pointer: fine) {
+    .provider-settings:hover {
+      background: var(--color-surface-soft);
+    }
   }
 
   .provider-settings:focus-visible {
@@ -572,8 +581,10 @@
     text-decoration: none;
   }
 
-  .model-picker-settings:hover {
-    color: var(--color-ink);
+  @media (hover: hover) and (pointer: fine) {
+    .model-picker-settings:hover {
+      color: var(--color-ink);
+    }
   }
 
   @media (max-width: 640px) {
@@ -590,6 +601,16 @@
 
     :global(.model-picker-list) {
       max-height: min(55dvh, 480px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.model-picker-trigger) {
+      transition: none;
+    }
+
+    :global(.model-picker-trigger:active:not(:disabled)) {
+      transform: none;
     }
   }
 </style>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ChannelSessionIcon, Icon } from "@zendev-lab/spark-ui";
-  import { sidebarBotProfile, sidebarChannels, sidebarGroups, visibleSidebarSessions, type SidebarData } from "./sidebar";
+  import { sidebarBotProfile, sidebarNavigation, visibleSidebarSessions, type SidebarData } from "./sidebar";
   import { channelSessionPresentation, formatChannelSessionTitle } from "@zendev-lab/spark-ui/channel-session";
   import type { getDictionary } from "./i18n";
 
@@ -13,25 +13,24 @@
   } = $props();
   const copy = $derived(messages.web.shell);
   const selectedSessionId = $derived(pathname.startsWith("/sessions/") ? decodeURIComponent(pathname.slice("/sessions/".length)) : undefined);
-  const channels = $derived(sidebarChannels(data, selectedSessionId));
-  const groups = $derived(sidebarGroups(data, selectedSessionId));
+  const navigation = $derived(sidebarNavigation(data, selectedSessionId));
   let collapsed = $state<(string | null)[]>([]);
   let expanded = $state<(string | null)[]>([]);
 </script>
 
 <nav class="conversation-navigation" aria-label={copy.primaryNavigation}>
   <div class="navigation-scroll">
-    {#if channels.length > 0}
+    {#if navigation.channels.length > 0}
       <ul class="pinned-channels" aria-label={copy.channelConversations}>
-        {#each channels as session (session.sessionId)}
+        {#each navigation.channels as session (session.sessionId)}
           {@const presentation = channelSessionPresentation(session, { fallback: messages.web.home.sessionUntitled, labels: copy.channelLabels })}
-          {@const bot = sidebarBotProfile(session, data)}
+          {@const bot = sidebarBotProfile(session, data, presentation.channel?.adapter)}
           {@const title = formatChannelSessionTitle(session.name, { fallback: presentation.channel?.label ?? messages.web.home.sessionUntitled, labels: copy.channelLabels })}
           <li>
             <a class="session-link channel-link" draggable="false" href="/sessions/{encodeURIComponent(session.sessionId)}" aria-current={session.sessionId === selectedSessionId ? "page" : undefined} title={title} onclick={closeNavigation}>
               {#if presentation.channel}<ChannelSessionIcon adapter={presentation.channel.adapter} scope={presentation.channel.scope} label={presentation.channel.label} avatarUrl={bot?.avatarUrl} />{:else}<Icon name="message" size={18} />{/if}
               <span class="channel-text"><span class="session-title">{bot?.displayName ?? title}</span>{#if bot?.displayName}<span class="channel-detail">{title}</span>{/if}</span>
-              {#if session.activity === "running" || session.activity === "queued"}<span class="activity" class:running={session.activity === "running"} role="img" aria-label={messages.shared.status[session.activity] ?? session.activity}></span>{/if}
+              {@render activityDot(session.activity)}
             </a>
           </li>
         {/each}
@@ -42,10 +41,10 @@
         <p>{copy.navigationUnavailable}</p>
         <button class="text-action" type="button" onclick={retry}>{copy.retryNavigation}</button>
       </div>
-    {:else if groups.length === 0 && channels.length === 0}
+    {:else if navigation.groups.length === 0 && navigation.channels.length === 0}
       <p class="navigation-empty">{messages.web.home.noSessions}</p>
     {:else}
-      {#each groups as group (group.id)}
+      {#each navigation.groups as group (group.id)}
         {@const isCollapsed = collapsed.includes(group.id)}
         {@const isExpanded = expanded.includes(group.id)}
         {@const groupName = group.id === null ? messages.web.home.generalContext : group.name}
@@ -67,12 +66,11 @@
           {#if !isCollapsed}
             <ul>
               {#each visible as session (session.sessionId)}
+                {@const sessionTitle = session.name || messages.web.home.sessionUntitled}
                 <li>
-                  <a class="session-link" draggable="false" href="/sessions/{encodeURIComponent(session.sessionId)}" aria-current={session.sessionId === selectedSessionId ? "page" : undefined} title={session.name || messages.web.home.sessionUntitled} onclick={closeNavigation}>
-                    <span class="session-title">{session.name || messages.web.home.sessionUntitled}</span>
-                    {#if session.activity === "running" || session.activity === "queued"}
-                      <span class="activity" class:running={session.activity === "running"} role="img" aria-label={messages.shared.status[session.activity] ?? session.activity}></span>
-                    {/if}
+                  <a class="session-link" draggable="false" href="/sessions/{encodeURIComponent(session.sessionId)}" aria-current={session.sessionId === selectedSessionId ? "page" : undefined} title={sessionTitle} onclick={closeNavigation}>
+                    <span class="session-title">{sessionTitle}</span>
+                    {@render activityDot(session.activity)}
                   </a>
                 </li>
               {/each}
@@ -94,6 +92,12 @@
     </a>
   </div>
 </nav>
+
+{#snippet activityDot(activity: SidebarData["sessions"][number]["activity"])}
+  {#if activity === "running" || activity === "queued"}
+    <span class="activity" class:running={activity === "running"} role="img" aria-label={messages.shared.status[activity] ?? activity}></span>
+  {/if}
+{/snippet}
 
 <style>
   .conversation-navigation {

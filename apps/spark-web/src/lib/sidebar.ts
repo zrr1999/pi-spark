@@ -29,17 +29,8 @@ export type SidebarData = {
   unavailable: boolean;
 };
 
-export function sidebarChannels(data: SidebarData, selectedSessionId?: string) {
-  return data.sessions
-    .filter(
-      (session) =>
-        sessionHasChannelBinding(session) &&
-        (session.placement !== "archived" || session.sessionId === selectedSessionId),
-    )
-    .toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-}
-
-export function sidebarGroups(data: SidebarData, selectedSessionId: string | undefined) {
+export function sidebarNavigation(data: SidebarData, selectedSessionId?: string) {
+  const channels: SidebarSession[] = [];
   const groups = new Map<
     string | null,
     { id: string | null; name: string; sessions: SidebarSession[] }
@@ -50,12 +41,13 @@ export function sidebarGroups(data: SidebarData, selectedSessionId: string | und
     ]),
   );
   for (const session of data.sessions.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt))) {
-    if (
-      isWorkspaceAdministrator(session) ||
-      sessionHasChannelBinding(session) ||
-      (session.placement === "archived" && session.sessionId !== selectedSessionId)
-    )
+    const hideArchived =
+      session.placement === "archived" && session.sessionId !== selectedSessionId;
+    if (sessionHasChannelBinding(session)) {
+      if (!hideArchived) channels.push(session);
       continue;
+    }
+    if (isWorkspaceAdministrator(session) || hideArchived) continue;
     const id = sessionWorkspaceId(session);
     let group = groups.get(id);
     if (!group) {
@@ -64,11 +56,22 @@ export function sidebarGroups(data: SidebarData, selectedSessionId: string | und
     }
     group.sessions.push(session);
   }
-  return [...groups.values()].sort(
-    (a, b) =>
-      (b.sessions[0]?.updatedAt ?? "").localeCompare(a.sessions[0]?.updatedAt ?? "") ||
-      a.name.localeCompare(b.name),
-  );
+  return {
+    channels,
+    groups: [...groups.values()].sort(
+      (a, b) =>
+        (b.sessions[0]?.updatedAt ?? "").localeCompare(a.sessions[0]?.updatedAt ?? "") ||
+        a.name.localeCompare(b.name),
+    ),
+  };
+}
+
+export function sidebarChannels(data: SidebarData, selectedSessionId?: string) {
+  return sidebarNavigation(data, selectedSessionId).channels;
+}
+
+export function sidebarGroups(data: SidebarData, selectedSessionId: string | undefined) {
+  return sidebarNavigation(data, selectedSessionId).groups;
 }
 
 export function visibleSidebarSessions(
@@ -80,10 +83,12 @@ export function visibleSidebarSessions(
   return sessions.filter((session, index) => index < 5 || session.sessionId === selectedSessionId);
 }
 
-export function sidebarBotProfile(session: SidebarSession, data: SidebarData) {
+export function sidebarBotProfile(session: SidebarSession, data: SidebarData, adapter?: string) {
   const binding = session.bindings?.find((entry) => entry.kind === "channel");
   const type =
-    binding?.adapter ?? channelSessionPresentation(session, { fallback: "" }).channel?.adapter;
+    binding?.adapter ??
+    adapter ??
+    channelSessionPresentation(session, { fallback: "" }).channel?.adapter;
   let accounts = (data.channelAdapters ?? []).filter((adapter) => adapter.type === type);
   if (binding?.adapterAccountIdentity)
     accounts = accounts.filter(

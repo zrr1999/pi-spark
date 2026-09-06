@@ -159,8 +159,10 @@
     outline: none;
   }
 
-  summary:hover {
-    color: var(--color-ink-muted);
+  @media (hover: hover) and (pointer: fine) {
+    summary:hover {
+      color: var(--color-ink-muted);
+    }
   }
 
   .thinking-chain.issue summary {

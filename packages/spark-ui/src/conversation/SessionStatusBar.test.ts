@@ -86,6 +86,9 @@ describe("working directory presentation", () => {
   ])("formats %s relative to %s without matching sibling prefixes", (cwd, root, expected) => {
     expect(formatSessionWorkingDirectory(cwd, root)).toBe(expected);
   });
+  it("keeps an absolute directory when no workspace root is provided", () => {
+    expect(formatSessionWorkingDirectory("/repo/spark/src")).toBe("/repo/spark/src");
+  });
   it("retains the absolute directory in the accessible detail and hover title", () => {
     const { body } = render(SessionStatusBar, {
       props: { labels, cwd: "/repo/spark/src", workspacePath: "/repo/spark" },

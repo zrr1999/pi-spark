@@ -83,11 +83,11 @@ export function describeSessionStatus(
 export function formatSessionWorkingDirectory(cwd: string, workspacePath?: string): string {
   const path = cwd.replaceAll("\\", "/").replace(/(?<=.)\/$/u, "");
   const root = workspacePath?.replaceAll("\\", "/").replace(/(?<=.)\/$/u, "");
-  const prefix = root?.endsWith("/") ? root : `${root}/`;
+  const prefix = root ? (root.endsWith("/") ? root : `${root}/`) : undefined;
   const relative =
     root && path === root
       ? "."
-      : root && path.startsWith(prefix)
+      : root && prefix && path.startsWith(prefix)
         ? `./${path.slice(prefix.length)}`
         : path;
   const parts = relative.split("/");

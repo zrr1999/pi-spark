@@ -46,6 +46,7 @@
     mergeEarlierSparkSessionSnapshotWindow,
     isTerminalSparkHumanInteractionDelivery,
     parseSparkModelValue,
+    sparkModelValue,
     resolveSessionActivityState,
     sparkActionBarDefaultAction,
     sparkActionViewSchema,
@@ -169,9 +170,7 @@
   }
 
   $effect(() => {
-    const selected = snapshot.model
-      ? `${snapshot.model.providerName}/${snapshot.model.modelId}`
-      : "";
+    const selected = snapshot.model ? sparkModelValue(snapshot.model) : "";
     if (ownerModelValue !== selected) {
       ownerModelValue = selected;
       modelValue = selected;
@@ -373,13 +372,10 @@
     detachSessionEvents = attachWebSessionEvents(sessionId, (latest) => {
       if (latest.snapshot.sessionId !== sessionId) return;
       const statusChanged = snapshot.status !== latest.snapshot.status;
-      const wasBusy = ["queued", "running", "streaming"].includes(snapshot.status);
-      adoptLiveSnapshot(latest);
+      const wasBusy = isBusySessionStatus(snapshot.status);
+      windowOverride = latest;
       if (statusChanged) void invalidate("spark:navigation");
-      if (
-        wasBusy &&
-        !["queued", "running", "streaming"].includes(latest.snapshot.status)
-      ) {
+      if (wasBusy && !isBusySessionStatus(latest.snapshot.status)) {
         void notifyWhenHidden(
           "Spark turn completed",
           currentSession?.name ?? sessionId,
@@ -995,8 +991,8 @@
     invokeSessionControl(ownerSessionId, () => setThinking(thinkingLevel, ownerSessionId));
   }
 
-  function adoptLiveSnapshot(latest: SparkSessionSnapshotPage) {
-    windowOverride = latest;
+  function isBusySessionStatus(status: string): boolean {
+    return status === "queued" || status === "running" || status === "streaming";
   }
 
   async function loadEarlier() {
@@ -1148,11 +1144,11 @@
   }
 
   function mediaHref(item: ConversationMessageView, contentIndex: number, sourceMessageId?: string): string {
-    return `/api/v1/sessions/${encodeURIComponent(snapshot.sessionId)}/media/${encodeURIComponent(sourceMessageId ?? item.sourceMessageId ?? item.id)}/${contentIndex}`;
+    return `/api/v1/sessions/${encodeURIComponent(snapshot.sessionId)}/media/${encodeURIComponent(sourceMessageId ?? item.id)}/${contentIndex}`;
   }
 
   const enabledModels = $derived(
-    new Set((data.catalog.enabledModels ?? []).map((model) => `${model.providerName}/${model.modelId}`)),
+    new Set((data.catalog.enabledModels ?? []).map(sparkModelValue)),
   );
   const modelGroups = $derived(
     data.catalog.providers.map((provider) => ({
@@ -1161,9 +1157,9 @@
       brandIcon: brandIconForModelProvider(provider.providerName),
       settingsHref: providerSettingsHref(provider),
       options: provider.models
-        .filter((entry) => enabledModels.has(`${entry.model.providerName}/${entry.model.modelId}`))
+        .filter((entry) => enabledModels.has(sparkModelValue(entry.model)))
         .map((entry) => ({
-          value: `${entry.model.providerName}/${entry.model.modelId}`,
+          value: sparkModelValue(entry.model),
           label: entry.model.modelLabel ?? entry.model.modelId,
           disabled: !entry.available,
         })),
@@ -1365,7 +1361,7 @@
             {:else if part.type === "image"}
               <ImagePart
                 sessionId={snapshot.sessionId}
-                messageId={part.sourceMessageId ?? item.sourceMessageId ?? item.id}
+                messageId={part.sourceMessageId ?? item.id}
                 contentIndex={part.contentIndex}
                 mediaType={part.mediaType}
                 name={part.name}
@@ -1871,11 +1867,17 @@
     text-decoration: none;
   }
 
-  .export-actions a:hover,
   .export-actions a:focus-visible {
     background: var(--color-primary-weak);
     color: var(--color-primary);
     outline: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .export-actions a:hover {
+      background: var(--color-primary-weak);
+      color: var(--color-primary);
+    }
   }
 
   .history-search {
@@ -1975,7 +1977,7 @@
     align-items: center;
     background: var(--color-surface-soft);
     border: 1px solid var(--color-border-soft);
-    border-radius: 999px;
+    border-radius: var(--rounded-full);
     display: inline-flex;
     gap: 4px;
     padding: 3px 8px;
@@ -2016,7 +2018,9 @@
   :global(.artifact-title) { font-size: var(--text-section-title); font-weight: var(--weight-section-title); margin: 0; }
   .artifact-preview pre { font-family: var(--font-mono); margin: 0; overflow: auto; padding: var(--spacing-lg) var(--spacing-xl); white-space: pre-wrap; }
   :global(.artifact-close) { align-items: center; background: transparent; border: 0; border-radius: var(--rounded-md); color: var(--color-ink-muted); cursor: pointer; display: inline-flex; height: 32px; justify-content: center; width: 32px; }
-  :global(.artifact-close:hover) { background: var(--color-surface-soft); }
+  @media (hover: hover) and (pointer: fine) {
+    :global(.artifact-close:hover) { background: var(--color-surface-soft); }
+  }
 
   @media (max-width: 900px) {
     .conversation-header {
