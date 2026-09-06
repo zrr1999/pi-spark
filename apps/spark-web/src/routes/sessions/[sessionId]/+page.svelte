@@ -33,6 +33,7 @@
     SlashCommandMenu,
     TaskRunPart,
     ThinkingChainPart,
+    thinkingChainHasTerminalIssue,
     ToolCallPart,
     visibleConversationParts,
     visibleConversationPartText,
@@ -59,7 +60,7 @@
     type SparkActionView,
     type SparkThinkingLevel,
   } from "@zendev-lab/spark-protocol";
-  import { conversationMessageFromView } from "$lib/conversation";
+  import { conversationMessagesFromViews } from "$lib/conversation";
   import { attachWebSessionEvents, type WebSessionConnectionState } from "$lib/live-events";
   import { explicitMemoryRefs, sparkWebTurnMessageMetadata } from "$lib/memory-feedback";
   import {
@@ -126,6 +127,7 @@
   let modelCommitRequestToken = 0;
   let searchOpen = $state(false);
   let searchQuery = $state("");
+  let focusedActivityMessageId = $state<string | null>(null);
   let searchResults = $state<
     Array<{ messageId: string; ref: string; role: string; excerpt: string }>
   >([]);
@@ -222,7 +224,7 @@
       },
     ];
   });
-  let messages = $derived(snapshot.messages.map(conversationMessageFromView));
+  let messages = $derived(conversationMessagesFromViews(snapshot.messages));
   let activity = $derived(resolveSessionActivityState({ session: snapshot, projectedTurns: [] }));
   let currentSession = $derived(treeSessions.find((session) => session.sessionId === snapshot.sessionId));
   let currentWorkspaceId = $derived(currentSession?.scope.kind === "workspace" ? currentSession.scope.workspaceId : undefined);
@@ -846,10 +848,12 @@
       }
       if (!ownsReveal()) return;
       windowOverride = current;
+      focusedActivityMessageId = messageId;
       await tick();
       if (!ownsReveal()) return;
+      const presentationId = messages.find((item) => item.sourceMessageIds.includes(messageId))?.id ?? messageId;
       document
-        .getElementById(messageId)
+        .getElementById(presentationId)
         ?.scrollIntoView({ behavior: preferredScrollBehavior(), block: "center" });
     } catch (error) {
       if (!ownsReveal()) return;
@@ -1138,8 +1142,8 @@
     requestAnimationFrame(() => artifactPreviewReturnFocus?.focus());
   }
 
-  function mediaHref(item: ConversationMessageView, contentIndex: number): string {
-    return `/api/v1/sessions/${encodeURIComponent(snapshot.sessionId)}/media/${encodeURIComponent(item.sourceMessageId ?? item.id)}/${contentIndex}`;
+  function mediaHref(item: ConversationMessageView, contentIndex: number, sourceMessageId?: string): string {
+    return `/api/v1/sessions/${encodeURIComponent(snapshot.sessionId)}/media/${encodeURIComponent(sourceMessageId ?? item.sourceMessageId ?? item.id)}/${contentIndex}`;
   }
 
   const enabledModels = $derived(
@@ -1355,11 +1359,11 @@
             {:else if part.type === "image"}
               <ImagePart
                 sessionId={snapshot.sessionId}
-                messageId={item.sourceMessageId ?? item.id}
+                messageId={part.sourceMessageId ?? item.sourceMessageId ?? item.id}
                 contentIndex={part.contentIndex}
                 mediaType={part.mediaType}
                 name={part.name}
-                mediaHref={mediaHref(item, part.contentIndex)}
+                mediaHref={mediaHref(item, part.contentIndex, part.sourceMessageId)}
               />
             {:else if part.type === "reasoning" || part.type === "commentary"}
               <ReasoningPart summary={part.summary} state={part.state} labels={partLabels} />
@@ -1367,6 +1371,8 @@
               <ThinkingChainPart
                 state={part.state}
                 steps={part.steps}
+                active={focusedActivityMessageId !== null && item.sourceMessageIds.includes(focusedActivityMessageId)}
+                summaryLabel={thinkingChainHasTerminalIssue(part.steps) ? undefined : `${part.state === "streaming" ? partLabels.chainStreaming : partLabels.chain} · ${part.steps.length}`}
                 labels={partLabels}
                 {statusLabel}
               />

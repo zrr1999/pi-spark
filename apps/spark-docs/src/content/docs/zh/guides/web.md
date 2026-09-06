@@ -137,3 +137,5 @@ spark daemon session list --json
 ```
 
 详见[界面与所有权](/zh/concepts/surfaces/)和[运行与会话](/zh/guides/runs-and-sessions/)。
+
+同一轮连续的思考、工具调用和结果共用一个 Spark 消息头，并收起为执行过程摘要。最终答复显示在摘要下方；展开可查看原始详情，历史搜索会打开命中的执行过程，图片仍从原始消息加载。

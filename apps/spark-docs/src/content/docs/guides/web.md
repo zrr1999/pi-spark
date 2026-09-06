@@ -171,3 +171,5 @@ spark daemon session list --json
 
 See [surfaces and ownership](/concepts/surfaces/) and
 [runs and sessions](/guides/runs-and-sessions/).
+
+Contiguous reasoning, tool calls, and results share one Spark message header and a collapsible execution summary. The final answer remains visible below it. Expanding the summary reveals the original details; history search opens the matching execution and media keeps its original transcript source.

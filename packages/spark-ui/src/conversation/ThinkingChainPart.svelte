@@ -19,16 +19,17 @@
     labels: ConversationPartLabels;
     statusLabel: (status: string) => string;
     active?: boolean;
+    summaryLabel?: string;
   };
 
-  let { state: chainState, steps, labels, statusLabel, active = false }: Props = $props();
+  let { state: chainState, steps, labels, statusLabel, active = false, summaryLabel }: Props = $props();
   let visibleSteps = $derived(visibleThinkingChainSteps(steps));
   let needsFailureSummary = $derived(thinkingChainNeedsFailureSummary(steps));
   let shouldRender = $derived(isVisibleThinkingChain(chainState, steps));
   let derivedHeadline = $derived(thinkingChainHeadline(visibleSteps));
   let usesFailureHeadline = $derived(!derivedHeadline && needsFailureSummary);
   let headline = $derived(
-    derivedHeadline ??
+    summaryLabel ?? derivedHeadline ??
       (usesFailureHeadline
         ? labels.chainFailed
         : chainState === "streaming"

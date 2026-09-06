@@ -772,3 +772,73 @@ describe("Session page owner state", () => {
     await screen.unmount();
   });
 });
+
+describe("grouped execution presentation", () => {
+  it("shows one Spark header, expands source details, and retains the final answer", async () => {
+    const data = sessionData("grouped");
+    data.window.snapshot.messages = [
+      {
+        version: 4,
+        id: "call",
+        role: "assistant",
+        text: "",
+        status: "done",
+        metadata: {},
+        parts: [
+          {
+            id: "t",
+            type: "tool-call",
+            toolCallId: "read",
+            toolName: "read",
+            status: "complete",
+            metadata: {},
+          },
+        ],
+      },
+      {
+        version: 4,
+        id: "result",
+        parentId: "call",
+        role: "tool",
+        text: "",
+        status: "done",
+        metadata: {},
+        parts: [
+          {
+            id: "r",
+            type: "tool-result",
+            toolCallId: "read",
+            toolName: "read",
+            summary: "Unique execution detail",
+            status: "complete",
+            metadata: {},
+          },
+        ],
+      },
+      {
+        version: 4,
+        id: "final",
+        parentId: "result",
+        role: "assistant",
+        text: "Finished reviewing",
+        status: "done",
+        metadata: {},
+      },
+    ];
+    const screen = await render(SessionPage, { data });
+    await expect.element(screen.getByText("Finished reviewing", { exact: true })).toBeVisible();
+    expect(document.querySelectorAll(".thinking-chain")).toHaveLength(1);
+    expect(document.querySelectorAll(".conversation-message.spark")).toHaveLength(1);
+    expect(document.querySelector(".thinking-chain")?.hasAttribute("open")).toBe(false);
+    await userEvent.click(document.querySelector(".thinking-chain summary")!);
+    await expect
+      .element(screen.getByText("Unique execution detail", { exact: true }).first())
+      .toBeVisible();
+    await userEvent.click(document.querySelector(".thinking-chain summary")!);
+    await screen.rerender({ data: { ...data, requestedMessageId: "result" } });
+    await expect
+      .element(screen.getByText("Unique execution detail", { exact: true }).first())
+      .toBeVisible();
+    expect(document.querySelectorAll(".conversation-message.spark")).toHaveLength(1);
+  });
+});
