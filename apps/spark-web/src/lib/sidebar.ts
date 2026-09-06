@@ -1,3 +1,4 @@
+import { sessionHasChannelBinding } from "@zendev-lab/spark-ui/channel-session";
 import type { SparkSessionProjection } from "@zendev-lab/spark-protocol";
 import {
   isWorkspaceAdministrator,
@@ -15,12 +16,23 @@ export type SidebarSession = Pick<
   | "placement"
   | "activity"
   | "updatedAt"
+  | "bindings"
 >;
 export type SidebarData = {
   workspaces: SparkWebWorkspace[];
   sessions: SidebarSession[];
   unavailable: boolean;
 };
+
+export function sidebarChannels(data: SidebarData, selectedSessionId?: string) {
+  return data.sessions
+    .filter(
+      (session) =>
+        sessionHasChannelBinding(session) &&
+        (session.placement !== "archived" || session.sessionId === selectedSessionId),
+    )
+    .toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
 
 export function sidebarGroups(data: SidebarData, selectedSessionId: string | undefined) {
   const groups = new Map<
@@ -35,6 +47,7 @@ export function sidebarGroups(data: SidebarData, selectedSessionId: string | und
   for (const session of data.sessions.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt))) {
     if (
       isWorkspaceAdministrator(session) ||
+      sessionHasChannelBinding(session) ||
       (session.placement === "archived" && session.sessionId !== selectedSessionId)
     )
       continue;

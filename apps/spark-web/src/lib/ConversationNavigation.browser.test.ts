@@ -19,6 +19,7 @@ function sidebarData(): SidebarData {
       name: `Conversation ${index} with a deliberately long title`,
       scope: { kind: "workspace", workspaceId: `project-${Math.floor(index / 8)}` },
       lineage: { kind: "child", parentSessionId: "admin", origin: { kind: "session" } },
+      bindings: [],
       roleBinding: { kind: "none" },
       placement: "active",
       activity: index === 0 ? "running" : "idle",
@@ -116,4 +117,43 @@ describe("conversation navigation", () => {
       .toHaveAttribute("href", "/settings");
     await screen.unmount();
   });
+});
+
+it("pins recognizable QQ branding, removes global actions, and scopes each new conversation link", async () => {
+  const input = props();
+  input.data.sessions.push({
+    ...input.data.sessions[0]!,
+    sessionId: "qq-channel",
+    name: "channel qqbot:c2c:7B0470990647FE7AC9ECF1821A7FA349",
+    scope: { kind: "daemon", daemonId: "daemon" },
+    bindings: [
+      {
+        kind: "channel",
+        adapter: "qqbot",
+        externalKey: "qqbot:c2c:7B0470990647FE7AC9ECF1821A7FA349",
+      },
+    ],
+    activity: "idle",
+  });
+  const screen = await render(ConversationNavigation, input);
+  screen.container.style.height = "650px";
+  screen.container.style.width = "280px";
+  const nav = screen.container.querySelector("nav")!;
+  expect(getComputedStyle(nav).userSelect).toBe("none");
+  const first = screen.container.querySelector<HTMLAnchorElement>(".navigation-scroll a")!;
+  expect(first.getAttribute("href")).toBe("/sessions/qq-channel");
+  expect(first.textContent).toContain("QQ chat · 7B047099…");
+  expect(first.textContent).not.toContain("qqbot:c2c:");
+  const icon = first.querySelector("img")!;
+  await expect.poll(() => icon.complete && icon.naturalWidth > 0).toBe(true);
+  await expect
+    .element(screen.getByRole("link", { name: "All conversations", exact: true }))
+    .not.toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("link", { name: "New conversation", exact: true }))
+    .not.toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("link", { name: "New conversation: Project 0", exact: true }))
+    .toHaveAttribute("href", "/?workspace=project-0");
+  await screen.unmount();
 });

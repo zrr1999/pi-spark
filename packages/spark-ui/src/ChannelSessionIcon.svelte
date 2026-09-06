@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { BrandIcon, Icon } from "@zendev-lab/spark-ui";
+  import Icon from "./Icon.svelte";
+  import qqLogo from "./assets/qq-logo.png";
   import {
     channelSessionScopeKind,
     type ChannelSessionAdapter,
     type ChannelSessionScope,
-  } from "$lib/channel-session-title";
-  import type { IconName } from "@zendev-lab/spark-ui";
+  } from "./channel-session";
+  import type { IconName } from "./icons";
 
   let {
     adapter,
@@ -39,7 +40,7 @@
   title={label}
 >
   {#if adapter === "qqbot"}
-    <BrandIcon name="qq" size={14} />
+    <img src={qqLogo} width="18" height="18" alt="" draggable="false" />
   {:else}
     <Icon name={adapterIcon} size={14} stroke={2.1} />
   {/if}

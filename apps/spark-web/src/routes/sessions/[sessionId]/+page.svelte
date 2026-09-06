@@ -60,6 +60,7 @@
     type SparkActionView,
     type SparkThinkingLevel,
   } from "@zendev-lab/spark-protocol";
+  import { formatChannelSessionTitle } from "@zendev-lab/spark-ui/channel-session";
   import { conversationMessagesFromViews } from "$lib/conversation";
   import { attachWebSessionEvents, type WebSessionConnectionState } from "$lib/live-events";
   import { explicitMemoryRefs, sparkWebTurnMessageMetadata } from "$lib/memory-feedback";
@@ -227,6 +228,7 @@
   let messages = $derived(conversationMessagesFromViews(snapshot.messages));
   let activity = $derived(resolveSessionActivityState({ session: snapshot, projectedTurns: [] }));
   let currentSession = $derived(treeSessions.find((session) => session.sessionId === snapshot.sessionId));
+  let currentSessionTitle = $derived(formatChannelSessionTitle(currentSession?.name, { fallback: copy.tree.untitled, labels: data.messages.web.shell.channelLabels }));
   let currentWorkspaceId = $derived(currentSession?.scope.kind === "workspace" ? currentSession.scope.workspaceId : undefined);
   let partLabels: ConversationPartLabels = $derived({
     reasoning: workbenchCopy.reasoning,
@@ -1169,7 +1171,7 @@
   );
 </script>
 
-<svelte:head><title>{currentSession?.name ?? copy.tree.untitled} · Spark</title></svelte:head>
+<svelte:head><title>{currentSessionTitle} · Spark</title></svelte:head>
 
 {#snippet queueActions(item: { id: string })}
   <Button variant="ghost" size="compact" onclick={() => void cancelQueuedTurn(item.id)}>
@@ -1217,7 +1219,7 @@
   <header class="conversation-header">
     <div class="conversation-identity">
       <span>{copy.currentSession}</span>
-      <h1>{currentSession?.name ?? copy.tree.untitled}</h1>
+      <h1>{currentSessionTitle}</h1>
     </div>
     <div class="conversation-view-controls" aria-label={copy.actions}>
       <Button

@@ -275,3 +275,31 @@ function invocationData(): InvocationData {
     },
   } as unknown as InvocationData;
 }
+
+it("starts in the workspace selected by its sidebar plus rather than the launch workspace", async () => {
+  const data = dashboardData();
+  data.workspaces.push({ ...data.workspaces[0]!, id: "ws-b", displayName: "Repository B" });
+  data.sessions.push({
+    ...data.sessions[0]!,
+    sessionId: "admin-b",
+    scope: { kind: "workspace", workspaceId: "ws-b" },
+    lineage: { kind: "root" },
+    roleBinding: { kind: "explicit", roleRef: "role:builtin-administrator" },
+  });
+  mocks.webRpc.mockImplementation(async (method: string) => {
+    if (method === "session.create") return { sessionId: "new-b" };
+    if (method === "turn.submit") return { invocationId: "inv-b" };
+    throw new Error(method);
+  });
+  const screen = await render(DashboardPage, { data });
+  await screen.rerender({ data: { ...data, requestedWorkspaceId: "ws-b" } });
+  await screen.getByRole("textbox", { name: "First message" }).fill("Work in B");
+  await screen.getByRole("button", { name: "Start conversation", exact: true }).click();
+  await expect
+    .poll(() => mocks.webRpc.mock.calls.find(([method]) => method === "session.create")?.[1])
+    .toMatchObject({
+      scope: { kind: "workspace", workspaceId: "ws-b" },
+      supervisorSessionId: "admin-b",
+    });
+  await screen.unmount();
+});

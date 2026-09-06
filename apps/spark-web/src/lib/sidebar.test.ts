@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { sidebarGroups, visibleSidebarSessions, type SidebarSession } from "./sidebar";
+import {
+  sidebarChannels,
+  sidebarGroups,
+  visibleSidebarSessions,
+  type SidebarSession,
+} from "./sidebar";
 
 function sidebarSession(
   sessionId: string,
@@ -10,6 +15,7 @@ function sidebarSession(
     name: sessionId,
     scope: { kind: "workspace", workspaceId: "spark" },
     lineage: { kind: "child", parentSessionId: "administrator", origin: { kind: "session" } },
+    bindings: [],
     roleBinding: { kind: "none" },
     placement: "active",
     activity: "idle",
@@ -54,4 +60,29 @@ describe("conversation sidebar grouping", () => {
     ).toEqual(["session-0", "session-1", "session-2", "session-3", "session-4", "session-9"]);
     expect(visibleSidebarSessions(sessions, true)).toEqual(sessions);
   });
+});
+
+it("pins bound channel conversations ahead of workspace groups without leaking them into General", () => {
+  const channel = sidebarSession("qq", {
+    name: "Custom chat",
+    scope: { kind: "daemon", daemonId: "daemon" },
+    bindings: [
+      {
+        kind: "channel",
+        adapter: "qqbot",
+        externalKey: "qqbot:c2c:7B0470990647FE7AC9ECF1821A7FA349",
+      },
+    ],
+  });
+  const data = {
+    unavailable: false,
+    workspaces: [],
+    sessions: [sidebarSession("recent"), channel],
+  };
+  expect(sidebarChannels(data).map((session) => session.sessionId)).toEqual(["qq"]);
+  expect(
+    sidebarGroups(data, undefined)
+      .flatMap((group) => group.sessions)
+      .map((session) => session.sessionId),
+  ).toEqual(["recent"]);
 });

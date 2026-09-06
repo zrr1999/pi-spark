@@ -62,6 +62,14 @@
     selectedWorkspaceId = data.cwdWorkspaceId ?? data.workspaces[0]?.id ?? "";
   });
 
+  $effect(() => {
+    const requested = data.requestedWorkspaceId;
+    if (requested) {
+      selectedWorkspaceId = requested;
+      requestAnimationFrame(() => document.getElementById("spark-web-first-message")?.focus({ preventScroll: true }));
+    }
+  });
+
   function workspaceLabel(session: SparkWebSession): string {
     const workspaceId = sessionWorkspaceId(session);
     if (!workspaceId) return copy.generalContext;
