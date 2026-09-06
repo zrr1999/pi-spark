@@ -1492,15 +1492,17 @@
       submitDisabled={submitting || connectionState === "reconnecting" || (!prompt.trim() && pendingAttachments.length === 0)}
     >
       {#snippet attachments()}
-        <div class="attachment-list">
-          {#each pendingAttachments as attachment, index (`${attachment.name}:${attachment.size}:${index}`)}
-            <span>
-              {attachment.name} · {Math.ceil(attachment.size / 1024)} KiB
-              <Button variant="ghost" size="compact" ariaLabel={`${copy.removeAttachment} ${attachment.name}`} onclick={() => (pendingAttachments = pendingAttachments.filter((_, itemIndex) => itemIndex !== index))}><Icon name="close" size={13} /></Button>
-            </span>
-          {/each}
-          {#if attachmentError}<span class="attachment-error" role="alert">{attachmentError}</span>{/if}
-        </div>
+        {#if pendingAttachments.length > 0 || attachmentError}
+          <div class="attachment-list">
+            {#each pendingAttachments as attachment, index (`${attachment.name}:${attachment.size}:${index}`)}
+              <span>
+                {attachment.name} · {Math.ceil(attachment.size / 1024)} KiB
+                <Button variant="ghost" size="compact" ariaLabel={`${copy.removeAttachment} ${attachment.name}`} onclick={() => (pendingAttachments = pendingAttachments.filter((_, itemIndex) => itemIndex !== index))}><Icon name="close" size={13} /></Button>
+              </span>
+            {/each}
+            {#if attachmentError}<span class="attachment-error" role="alert">{attachmentError}</span>{/if}
+          </div>
+        {/if}
       {/snippet}
       {#snippet actions()}
         {#if slashActionBar}
@@ -1522,8 +1524,8 @@
         {/if}
       {/snippet}
       {#snippet tools()}
-        <label class="attach-button">
-          <Icon name="file" size={14} />
+        <label class="attach-button" title={copy.addFiles}>
+          <Icon name="plus" size={18} />
           <span>{copy.addFiles}</span>
           <input type="file" multiple onchange={(event) => void addAttachments(event)} />
         </label>
@@ -1548,6 +1550,7 @@
   <SessionStatusBar
     labels={statusLabels}
     cwd={snapshot.cwd ?? ""}
+    workspacePath={data.navigation?.workspaces.find((workspace) => workspace.id === currentWorkspaceId)?.localPath}
     gitBranch={snapshot.gitBranch}
     inputTokens={snapshot.usage?.inputTokens}
     outputTokens={snapshot.usage?.outputTokens}
@@ -1753,8 +1756,7 @@
     position: relative;
   }
 
-  .conversation-view-controls summary,
-  .attach-button {
+  .conversation-view-controls summary {
     align-items: center;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -1951,6 +1953,20 @@
   .attachment-error {
     color: var(--color-danger);
   }
+  .attach-button {
+    align-items: center;
+    border-radius: var(--rounded-md);
+    color: var(--color-ink-muted);
+    cursor: pointer;
+    display: inline-flex;
+    gap: var(--spacing-xs);
+    min-height: var(--control-height-default);
+    padding: 0 var(--spacing-xs);
+    font-size: var(--text-caption);
+  }
+  .attach-button:hover { background: var(--color-surface-soft); color: var(--color-ink); }
+  .attach-button:focus-within { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  @media (pointer: coarse), (max-width: 640px) { .attach-button { min-height: var(--control-height-touch); } }
   .attach-button input {
     block-size: 1px;
     inline-size: 1px;

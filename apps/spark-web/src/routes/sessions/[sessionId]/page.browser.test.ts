@@ -866,3 +866,33 @@ describe("grouped execution presentation", () => {
     expect(document.querySelectorAll(".conversation-message.spark")).toHaveLength(1);
   });
 });
+
+it("keeps the composer compact until attachments exist and shows the workspace-relative directory", async () => {
+  mocks.webRpc.mockResolvedValue({ waits: [] });
+  const data = sessionData("a");
+  data.window.snapshot.cwd = "/repo/spark/src";
+  data.navigation = {
+    unavailable: false,
+    sessions: [],
+    workspaces: [
+      { id: "workspace-a", displayName: "Spark", localPath: "/repo/spark", status: "ready" },
+    ],
+  };
+  const screen = await render(SessionPage, { data });
+  const attachments = screen.container.querySelector<HTMLElement>(".composer-attachments")!;
+  expect(attachments.getBoundingClientRect().height).toBe(0);
+  expect(screen.container.querySelector(".cwd")?.textContent).toBe("./src");
+  expect(screen.container.querySelector(".workspace-context")?.getAttribute("title")).toContain(
+    "/repo/spark/src",
+  );
+  const input = screen.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const transfer = new DataTransfer();
+  transfer.items.add(new File(["test"], "note.txt", { type: "text/plain" }));
+  input.files = transfer.files;
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+  await expect.element(screen.getByText(/note\.txt/u)).toBeVisible();
+  expect(attachments.getBoundingClientRect().height).toBeGreaterThan(0);
+  await screen.getByRole("button", { name: "Remove note.txt" }).click();
+  await expect.poll(() => attachments.getBoundingClientRect().height).toBe(0);
+  await screen.unmount();
+});

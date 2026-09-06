@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     describeSessionStatus,
+    formatSessionWorkingDirectory,
     formatCompactTokenCount,
     formatContextUsage,
     formatSessionCost,
@@ -11,6 +12,7 @@
   type Props = {
     labels: SessionStatusBarLabels;
     cwd: string;
+    workspacePath?: string;
     gitBranch?: string;
     inputTokens?: number;
     outputTokens?: number;
@@ -25,6 +27,7 @@
   let {
     labels,
     cwd,
+    workspacePath,
     gitBranch,
     inputTokens,
     outputTokens,
@@ -74,7 +77,7 @@
   title={statusDescription}
 >
   <div class="workspace-context" title={`${labels.workingDirectory}: ${cwd}`}>
-    <span class="cwd">{cwd}</span>
+    <span class="cwd">{formatSessionWorkingDirectory(cwd, workspacePath)}</span>
     {#if gitBranch?.trim()}
       <span
         class="branch"
@@ -162,7 +165,7 @@
     container: session-status / inline-size;
     display: flex;
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--text-caption);
     font-variant-numeric: tabular-nums;
     gap: 0;
     line-height: 1.25;
@@ -190,7 +193,7 @@
   .workspace-context {
     color: var(--color-ink-muted);
     flex: 1 1 14rem;
-    font-weight: 650;
+    font-weight: var(--weight-body-medium);
     overflow: hidden;
   }
 
@@ -214,7 +217,7 @@
   .metric {
     color: var(--color-ink-muted);
     flex: 0 0 auto;
-    font-weight: 650;
+    font-weight: var(--weight-body-medium);
   }
 
   .context {
