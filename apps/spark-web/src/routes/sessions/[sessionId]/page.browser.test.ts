@@ -140,6 +140,10 @@ function sessionDataWithModels(sessionId: string) {
   };
   data.catalog = {
     diagnostics: [],
+    enabledModels: [
+      { providerName: "provider", modelId: "owner" },
+      { providerName: "provider", modelId: "candidate" },
+    ],
     providers: [
       {
         providerName: "provider",
@@ -274,6 +278,24 @@ describe("Session page owner state", () => {
     await expect
       .element(screen.getByRole("textbox", { name: "Prompt" }))
       .toHaveValue("After reconnect");
+    await screen.unmount();
+  });
+
+  it("shows only enabled models and preserves the current model label", async () => {
+    const data = sessionDataWithModels("a");
+    data.catalog.enabledModels = [{ providerName: "provider", modelId: "candidate" }];
+    const screen = await render(SessionPage, { data });
+    await screen.getByText("Conversation settings", { exact: true }).click();
+    await expect
+      .element(screen.getByRole("button", { name: "Model", exact: true }))
+      .toHaveAttribute("title", "Owner");
+    await screen.getByRole("button", { name: "Model", exact: true }).click();
+    await expect
+      .element(screen.getByRole("option", { name: "Candidate", exact: true }))
+      .toBeVisible();
+    await expect
+      .element(screen.getByRole("option", { name: "Owner", exact: true }))
+      .not.toBeInTheDocument();
     await screen.unmount();
   });
 

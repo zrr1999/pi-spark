@@ -251,6 +251,7 @@
 />
 
 <style>
+  .provider-grid :global(input) { scroll-margin-top: 180px; }
   h3, p { margin: 0; }
   article, form { display: grid; gap: var(--spacing-sm); }
   article p { color: var(--color-ink-muted); }

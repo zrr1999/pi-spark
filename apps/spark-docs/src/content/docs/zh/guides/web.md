@@ -80,6 +80,8 @@ spark bg --json "Run the repository validation."
 
 ## 设置与模型控制
 
+模型选择器只展示 daemon 已启用的模型。OpenAI Codex 内置默认策略使用 GPT-6；已保存的旧内置默认策略会自动迁移，自定义策略与现有会话选择保持不变。点击供应商标题可直接前往对应 OAuth 页面或 API key 输入框。
+
 在工作台的 Settings 中查看 daemon 生命周期与脱敏日志、配置 Provider 认证和
 为 Baidu OneAPI 或 Kimi For Coding 保存 API key、配置 enabled/default model，
 或在活动 invocation draining 后请求确认重启。OpenAI Codex 等 OAuth

@@ -66,6 +66,7 @@
     parsePendingHumanInteractions,
     type PendingHumanInteraction,
   } from "$lib/pending-human-interactions";
+  import { providerSettingsHref } from "$lib/provider-auth";
   import { webRpc } from "$lib/web-rpc";
 
   let { data } = $props();
@@ -1141,16 +1142,22 @@
     return `/api/v1/sessions/${encodeURIComponent(snapshot.sessionId)}/media/${encodeURIComponent(item.sourceMessageId ?? item.id)}/${contentIndex}`;
   }
 
+  const enabledModels = $derived(
+    new Set((data.catalog.enabledModels ?? []).map((model) => `${model.providerName}/${model.modelId}`)),
+  );
   const modelGroups = $derived(
     data.catalog.providers.map((provider) => ({
       id: provider.providerName,
       label: provider.label,
       brandIcon: brandIconForModelProvider(provider.providerName),
-      options: provider.models.map((entry) => ({
-        value: `${entry.model.providerName}/${entry.model.modelId}`,
-        label: entry.model.modelLabel ?? entry.model.modelId,
-        disabled: !entry.available,
-      })),
+      settingsHref: providerSettingsHref(provider),
+      options: provider.models
+        .filter((entry) => enabledModels.has(`${entry.model.providerName}/${entry.model.modelId}`))
+        .map((entry) => ({
+          value: `${entry.model.providerName}/${entry.model.modelId}`,
+          label: entry.model.modelLabel ?? entry.model.modelId,
+          disabled: !entry.available,
+        })),
     })),
   );
 </script>
@@ -1243,7 +1250,7 @@
             emptyLabel={copy.noModels}
             closeLabel={copy.close}
             clearSearchLabel={copy.clear}
-            selectedLabel={copy.selected}
+            selectedLabel={snapshot.model?.modelLabel ?? snapshot.model?.modelId ?? copy.selected}
             onCommit={commitModelValue}
           />
           <div class="thinking-control">

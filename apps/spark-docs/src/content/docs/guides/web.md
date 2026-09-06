@@ -101,6 +101,8 @@ spark bg --json "Run the repository validation."
 
 ## Settings and model control
 
+The model picker shows only daemon-enabled models. Bundled OpenAI Codex defaults use GPT-6; saved bundled defaults migrate automatically, while custom policies and existing session selections are preserved. Click a provider heading to open its OAuth page or API-key field.
+
 Open Settings in the workbench to inspect daemon lifecycle and redacted logs,
 save API keys for Baidu OneAPI or Kimi For Coding, configure enabled/default
 models, or request a confirmed restart after active invocations drain. OAuth
