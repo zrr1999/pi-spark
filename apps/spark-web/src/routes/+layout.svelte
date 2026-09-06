@@ -180,7 +180,6 @@
   <a class="skip-link" href="#spark-main">{data.messages.shared.skipToContent}</a>
 {/snippet}
 
-<!-- THESIS: Spark Web is the local conversation canvas; execution topology is invisible to users and operational coordination belongs in Hub. OWN-WORLD: quiet slate surfaces, precise one-pixel rules, Spark blue focus, and conversation-shaped controls. STORY: choose project context, send the first message, then continue inside its durable Session. FIRST VIEWPORT: a 52px command bar, compact conversation rail, centered Composer, and recent Sessions below. FORM: Conversation Canvas, the user-pinned correction to surface roll 5a7f18fc. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
 <OperationsShell
   header={shellHeader}
   {navigation}

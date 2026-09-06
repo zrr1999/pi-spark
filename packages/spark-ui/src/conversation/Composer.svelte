@@ -292,10 +292,13 @@
     min-height: var(--control-height-default);
     min-width: var(--control-height-default);
     padding: 0 var(--spacing-sm);
+    transition:
+      background var(--motion-fast) ease,
+      transform var(--motion-fast) var(--ease-out);
   }
 
-  .composer-submit:hover:not(:disabled) {
-    background: var(--color-primary-hover, #1d4ed8);
+  .composer-submit:active:not(:disabled) {
+    transform: scale(0.97);
   }
 
   .composer-submit:focus-visible {
@@ -381,9 +384,20 @@
     }
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .composer-submit:hover:not(:disabled) {
+      background: var(--color-primary-hover, #1d4ed8);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .conversation-composer-shell {
+    .conversation-composer-shell,
+    .composer-submit {
       transition: none;
+    }
+
+    .composer-submit:active:not(:disabled) {
+      transform: none;
     }
   }
 </style>

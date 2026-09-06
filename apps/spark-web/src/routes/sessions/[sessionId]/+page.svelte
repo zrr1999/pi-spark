@@ -1337,6 +1337,7 @@
   <ConversationViewport label={copy.transcript} followKey={snapshot.updatedAt} jumpToLatestLabel={copy.jumpToLatest}>
     {#each messages as item (item.id)}
       {@const copyableText = visibleConversationPartText(item.parts)}
+      {@const memoryRefs = memoryRefsInMessage(item)}
       <MessageShell
         id={item.id}
         actor={item.actor}
@@ -1432,9 +1433,9 @@
               <p>{partLabels.unknown}: {part.label}</p>
             {/if}
           {/each}
-          {#if memoryRefsInMessage(item).length > 0}
+          {#if memoryRefs.length > 0}
             <div class="memory-feedback">
-              {#each memoryRefsInMessage(item) as memoryRef (memoryRef)}
+              {#each memoryRefs as memoryRef (memoryRef)}
                 <code>{memoryRef}</code>
                 <Button variant="ghost" size="compact" ariaLabel={`${copy.memoryHelpful}: ${memoryRef}`} title={copy.memoryHelpful} disabled={Boolean(memoryFeedbackBusy)} onclick={() => void submitMemoryFeedback(memoryRef, "positive")}><Icon name="thumbs-up" size={14} /></Button>
                 <Button variant="ghost" size="compact" ariaLabel={`${copy.memoryUnhelpful}: ${memoryRef}`} title={copy.memoryUnhelpful} disabled={Boolean(memoryFeedbackBusy)} onclick={() => void submitMemoryFeedback(memoryRef, "negative")}><Icon name="thumbs-down" size={14} /></Button>
@@ -1703,6 +1704,13 @@
     font-size: var(--text-caption);
     gap: var(--spacing-sm);
     padding: var(--spacing-sm);
+    transition: opacity var(--motion-default) var(--ease-out);
+  }
+
+  @starting-style {
+    .connection-notice {
+      opacity: 0;
+    }
   }
 
   .connection-notice > div {
@@ -1768,24 +1776,27 @@
     font-size: var(--text-caption);
     font-weight: var(--weight-button);
     gap: 6px;
+    list-style: none;
     min-height: var(--control-height-compact);
     padding: 5px 10px;
     text-decoration: none;
-  }
-
-  .conversation-view-controls summary {
-    list-style: none;
   }
 
   .conversation-view-controls summary::-webkit-details-marker {
     display: none;
   }
 
-  .conversation-view-controls summary:hover,
   .conversation-view-controls summary:focus-visible,
   .conversation-view-controls details[open] > summary {
     background: var(--color-surface-soft);
     color: var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .conversation-view-controls summary:hover {
+      background: var(--color-surface-soft);
+      color: var(--color-ink);
+    }
   }
 
   .conversation-view-controls summary:focus-visible {
@@ -1805,7 +1816,19 @@
     position: absolute;
     right: 0;
     top: calc(100% + 7px);
+    transform-origin: top right;
+    transition:
+      opacity var(--motion-default) var(--ease-out),
+      transform var(--motion-default) var(--ease-out);
     z-index: 20;
+  }
+
+  @starting-style {
+    .conversation-settings-panel,
+    .more-actions-panel {
+      opacity: 0;
+      transform: scale(0.96);
+    }
   }
 
   .conversation-settings-panel {
@@ -1864,6 +1887,13 @@
     max-height: 34vh;
     overflow: auto;
     padding: 10px;
+    transition: opacity var(--motion-default) var(--ease-out);
+  }
+
+  @starting-style {
+    .history-search {
+      opacity: 0;
+    }
   }
   .history-search form,
   .history-search form div {
@@ -1961,17 +1991,24 @@
     display: inline-flex;
     gap: var(--spacing-xs);
     min-height: var(--control-height-default);
+    overflow: hidden;
     padding: 0 var(--spacing-xs);
     font-size: var(--text-caption);
+    position: relative;
+    transition: transform var(--motion-fast) var(--ease-out), background var(--motion-fast) ease;
   }
-  .attach-button:hover { background: var(--color-surface-soft); color: var(--color-ink); }
-  .attach-button:focus-within { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  .attach-button:active { transform: scale(0.97); }
+  .attach-button:focus-within { box-shadow: var(--shadow-focus); outline: none; }
+  @media (hover: hover) and (pointer: fine) { .attach-button:hover { background: var(--color-surface-soft); color: var(--color-ink); } }
   @media (pointer: coarse), (max-width: 640px) { .attach-button { min-height: var(--control-height-touch); } }
   .attach-button input {
-    block-size: 1px;
-    inline-size: 1px;
+    cursor: pointer;
+    height: 100%;
+    inset: 0;
+    margin: 0;
     opacity: 0;
     position: absolute;
+    width: 100%;
   }
   .artifact-preview { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 320px; }
   .artifact-preview header { align-items: start; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; padding: var(--spacing-lg) var(--spacing-xl); }
@@ -2062,6 +2099,18 @@
       right: 0;
       max-height: calc(100dvh - 260px);
       overflow-y: auto;
+      transform-origin: top center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .connection-notice,
+    .history-search,
+    .conversation-settings-panel,
+    .more-actions-panel,
+    .attach-button {
+      transition: none;
+      transform: none;
     }
   }
 </style>

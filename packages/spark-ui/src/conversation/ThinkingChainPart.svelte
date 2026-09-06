@@ -147,7 +147,7 @@
     min-height: 22px;
     padding: 0 3px;
     width: fit-content;
-    transition: color 120ms ease;
+    transition: color var(--motion-fast) ease;
   }
 
   summary::-webkit-details-marker {
@@ -181,7 +181,7 @@
   .disclosure {
     display: inline-flex;
     flex: 0 0 auto;
-    transition: transform 120ms ease;
+    transition: transform var(--motion-fast) var(--ease-out);
   }
 
   .chain-label {

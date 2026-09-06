@@ -254,14 +254,16 @@
     padding: 5px 10px;
     text-align: start;
     transition:
-      background 120ms ease,
-      border-color 120ms ease,
-      box-shadow 120ms ease;
+      background var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
   }
 
-  :global(.model-picker-trigger:hover:not(:disabled)) {
-    background: var(--color-surface-soft);
-    border-color: var(--color-focus-ring);
+  @media (hover: hover) and (pointer: fine) {
+    :global(.model-picker-trigger:hover:not(:disabled)) {
+      background: var(--color-surface-soft);
+      border-color: var(--color-focus-ring);
+    }
   }
 
   :global(.model-picker-trigger:focus-visible) {

@@ -33,6 +33,7 @@ export function conversationMessagesFromViews(
   let previous: SparkMessageView | undefined;
   let invocationId: string | undefined;
   let ended = true;
+  let openParts: ConversationPart[] | undefined;
   for (const message of messages) {
     const view = conversationMessageFromView(message);
     const parts: ConversationPart[] = view.parts
@@ -62,18 +63,16 @@ export function conversationMessagesFromViews(
       (!message.parentId || message.parentId === previous?.id) &&
       (!invocationId || !currentInvocation || invocationId === currentInvocation) &&
       (process || group.parts.some((part) => part.type === "chain"));
-    if (merge) {
-      group.parts = groupThinkingChainParts(
-        mergeToolParts([
-          ...group.parts.flatMap((part) => (part.type === "chain" ? part.steps : [part])),
-          ...parts,
-        ]),
-      );
+    if (merge && group && openParts) {
+      openParts.push(...parts);
+      openParts = mergeToolParts(openParts);
+      group.parts = groupThinkingChainParts(openParts);
       group.sourceMessageIds.push(message.id);
       group.status = view.status;
       group.body = [group.body, view.body].filter(Boolean).join("\n\n");
       invocationId ??= currentInvocation;
     } else {
+      openParts = parts;
       result.push({
         ...view,
         parts: groupThinkingChainParts(parts),

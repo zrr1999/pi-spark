@@ -108,8 +108,10 @@
     min-width: 0;
     padding: var(--spacing-sm) 0;
   }
-  .navigation-footer { padding: 0 var(--spacing-sm); }
-  .navigation-footer { border-top: 1px solid var(--color-border-soft); padding-top: var(--spacing-sm); }
+  .navigation-footer {
+    border-top: 1px solid var(--color-border-soft);
+    padding: var(--spacing-sm) var(--spacing-sm) 0;
+  }
   .navigation-scroll {
     min-height: 0;
     overflow: auto;
@@ -127,7 +129,7 @@
   .channel-link { padding-inline-start: var(--spacing-sm); gap: var(--spacing-sm); }
   .channel-text { display: grid; min-width: 0; flex: 1; padding-block: var(--spacing-xxs); gap: 2px; }
   .channel-detail { color: var(--color-ink-subtle); font-size: var(--text-caption); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .new-in-workspace { display: flex; align-items: center; justify-content: center; flex: 0 0 28px; height: 32px; border-radius: var(--rounded-xs); color: var(--color-ink-subtle); }
+  .new-in-workspace { display: flex; align-items: center; justify-content: center; flex: 0 0 32px; height: 32px; border-radius: var(--rounded-xs); color: var(--color-ink-subtle); }
   .workspace-group + .workspace-group { margin-top: var(--spacing-lg); }
   .group-heading { align-items: center; display: flex; gap: 2px; margin-bottom: var(--spacing-xxs); }
   .group-toggle { align-items: center; background: transparent; border: 0; border-radius: var(--rounded-xs); color: var(--color-ink-subtle); cursor: pointer; display: flex; flex: 0 0 24px; height: 32px; justify-content: center; padding: 0; }
@@ -137,8 +139,6 @@
   ul { list-style: none; margin: 0; padding: 0; }
   .session-link { color: var(--color-ink-muted); font-size: var(--text-body); justify-content: space-between; padding-inline-start: 28px; }
   .session-title { min-width: 0; }
-  a:hover, button:hover { background: var(--color-surface-soft); color: var(--color-ink); }
-  a[aria-current="page"] { background: var(--color-primary-weak); color: var(--color-primary); }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
   .text-action { background: transparent; border: 0; border-radius: var(--rounded-xs); color: var(--color-ink-subtle); cursor: pointer; font: inherit; font-size: var(--text-caption); min-height: 32px; padding: 0 var(--spacing-xs); text-align: start; }
   .show-more { margin-inline-start: 24px; }
@@ -147,6 +147,10 @@
   .activity { border: 2px solid var(--color-border); border-radius: 50%; box-sizing: border-box; flex: 0 0 12px; height: 12px; }
   .activity.running { border-color: var(--color-primary-soft); border-top-color: var(--color-primary); animation: activity-spin 1s linear infinite; }
   @keyframes activity-spin { to { transform: rotate(360deg); } }
+  @media (hover: hover) and (pointer: fine) {
+    a:hover, button:hover { background: var(--color-surface-soft); color: var(--color-ink); }
+  }
+  a[aria-current="page"] { background: var(--color-primary-weak); color: var(--color-primary); }
   @media (max-width: 900px) {
     .nav-link, .session-link, .workspace-link, .group-toggle, .text-action, .new-in-workspace { min-height: var(--control-height-touch); }
     .group-toggle { flex-basis: var(--control-height-touch); }
@@ -154,5 +158,11 @@
     .channel-link { padding-inline-start: var(--spacing-sm); }
     .new-in-workspace { flex-basis: var(--control-height-touch); }
   }
-  @media (prefers-reduced-motion: reduce) { .activity.running { animation: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .activity.running {
+      animation: none;
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+  }
 </style>
